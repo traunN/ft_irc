@@ -14,7 +14,6 @@
 
 #include "Main.hpp"
 
-namespace utils
-{
+namespace utils {
 	void	ParseArgs(int argc, char **argv);
 }
