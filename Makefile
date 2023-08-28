@@ -5,19 +5,55 @@
 #                                                     +:+ +:+         +:+      #
 #    By: ntraun <ntraun@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2023/08/22 14:42:37 by ntraun            #+#    #+#              #
-#    Updated: 2023/08/22 14:45:16 by ntraun           ###   ########.fr        #
+#    Created: 2023/08/22 15:02:15 by ntraun            #+#    #+#              #
+#    Updated: 2023/08/22 15:06:57 by ntraun           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-NAME = ft_irc
+NAME = ircserv
 
-CC = clang++
+green = \033[32m
+reset = \033[0m
 
-CFLAGS = -Wall -Wextra -Werror -std=c++98
+SRCDIR = sources/
+OBJDIR = .objects/
 
 SRC =	main.cpp\
-		Client.cpp\
-		Server.cpp\
-		Channel.cpp\
-		Utils.cpp\
+		# Client.cpp\
+		# Channel.cpp\
+		# Server.cpp\
+		# Utils.cpp\
+		# Commands.cpp\
+		
+OBJ = $(patsubst $(SRCDIR)%.cpp, $(OBJDIR)%.o, $(SRCDIR)$(SRC))
+
+INCLUDES = -I headers/
+
+CFLAGS = -Wall -Wextra -Werror -g -std=c++98
+
+cc = c++ $(CFLAGS)
+
+all: $(NAME)
+
+$(OBJDIR)%.o: $(SRCDIR)%.cpp
+	@$(cc) $(INCLUDES) -c $< -o $@
+
+$(NAME): $(OBJ)
+	@$(cc) $^ -o $@
+	@echo "$(green)$(NAME)$(reset) Created!"
+
+$(OBJ): | $(OBJDIR)
+
+$(OBJDIR):
+	@mkdir $(OBJDIR)
+
+clean:
+	@rm -rf $(OBJDIR)
+	@echo "Cleaned!"
+
+fclean: clean
+	@rm -rf $(NAME)
+
+re: fclean all
+
+.PHONY: all clean fclean re
