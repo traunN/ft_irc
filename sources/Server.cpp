@@ -1,11 +1,21 @@
 #include "Server.hpp"
 
+Server::Server(void) {
+	this->_name = "";
+	this->_password = "";
+	this->_channels = std::vector<Channel>();
+	this->_clients = std::vector<Client>();
+	// std::cout << "Server created" << std::endl;
+}
+
 Server::Server(std::string name, std::string password) : _name(name), _password(password) {
-	std::cout << "Server created" << std::endl;
+	this->_channels = std::vector<Channel>();
+	this->_clients = std::vector<Client>();
+	// std::cout << "Server created" << std::endl;
 }
 
 Server::~Server(void) {
-	std::cout << "Server destroyed" << std::endl;
+	// std::cout << "Server destroyed" << std::endl;
 }
 
 void	Server::Run(void) {
@@ -66,7 +76,7 @@ void	Server::RemoveChannel(Channel channel) {
 void	Server::RemoveClient(Client client) {
 	std::vector<Client>::iterator it = this->_clients.begin();
 	while (it != this->_clients.end()) {
-		if (it->GetNickname() == client.GetNickname()) {
+		if (it->GetUsername() == client.GetUsername()) {
 			this->_clients.erase(it);
 			break ;
 		}
@@ -75,13 +85,14 @@ void	Server::RemoveClient(Client client) {
 }
 
 std::ostream&	operator<<(std::ostream& os, Server& server) {
-	os << "Name: " << server.GetName() << std::endl;
-	os << "Password: " << server.GetPassword() << std::endl;
-	os << "Channels: " << std::endl;
+	os << "Server Name: " << server.GetName() << std::endl;
+	os << "Server Password: " << server.GetPassword() << std::endl;
+	os << "Server Channels: " << std::endl;
 	std::vector<Channel> channels = server.GetChannels();
 	for (std::vector<Channel>::iterator it = channels.begin(); it != channels.end(); it++) {
 		os << *it << std::endl;
 	}
+	std::cout << std::endl;
 	os << "Clients: " << std::endl;
 	std::vector<Client> clients = server.GetClients();
 	for (std::vector<Client>::iterator it = clients.begin(); it != clients.end(); it++) {

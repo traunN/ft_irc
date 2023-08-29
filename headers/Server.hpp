@@ -11,6 +11,7 @@ class Server {
 		std::vector<Channel> _channels;
 		std::vector<Client> _clients;
 	public:
+		Server(void);
 		Server(std::string name, std::string password);
 		virtual ~Server(void);
 		void Run(void);
@@ -29,3 +30,5 @@ class Server {
 		void RemoveChannel(Channel channel);
 		void RemoveClient(Client client);
 };
+
+std::ostream&	operator<<(std::ostream& os, Server& server);
