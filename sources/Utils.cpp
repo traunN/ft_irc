@@ -2,7 +2,9 @@
 
 namespace utils {
 	void	ParseArgs(int argc, char **argv) {
-		int port = std::atoi(argv[1]);
+		std::stringstream ss(argv[1]); //Use stringstream to convert string to int
+		int port;
+		ss >> port;
 		std::string password = argv[2];
 		if (argc != 3)
 			throw std::invalid_argument("Invalid number of arguments \nUsage: ./ircserv <port> <password>");
