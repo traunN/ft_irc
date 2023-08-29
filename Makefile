@@ -6,7 +6,7 @@
 #    By: ntraun <ntraun@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/08/22 15:02:15 by ntraun            #+#    #+#              #
-#    Updated: 2023/08/28 15:58:15 by ntraun           ###   ########.fr        #
+#    Updated: 2023/08/29 13:30:50 by ntraun           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -20,9 +20,9 @@ OBJDIR = .objects/
 
 SRC =	$(SRCDIR)main.cpp\
 		$(SRCDIR)Utils.cpp\
-		# Client.cpp\
-		# Channel.cpp\
-		# Server.cpp\
+		$(SRCDIR)Client.cpp\
+		$(SRCDIR)Channel.cpp\
+		$(SRCDIR)Server.cpp\
 		# Commands.cpp\
 		
 OBJ = $(patsubst $(SRCDIR)%.cpp, $(OBJDIR)%.o, $(SRC))

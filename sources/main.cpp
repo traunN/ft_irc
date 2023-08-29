@@ -9,6 +9,13 @@ int	main(int argc, char **argv)
 		std::cerr << e.what() << std::endl;
 		return (1);
 	}
-	std::cout << "Hello World!" << std::endl;
+	try {
+		Server server(argv[1], argv[2]);
+		server.Run();
+	}
+	catch (std::exception &e) {
+		std::cerr << e.what() << std::endl;
+		return (1);
+	}
 	return (0);
 }
