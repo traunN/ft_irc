@@ -6,15 +6,27 @@ class Channel;
 
 class Server {
 	private:
-		std::string _name;
+		int _server_fd;
+		int _opt;
+		int _new_socket;
+		int _valread;
+		int _addrlen;
+		int _max_fd;
+		int _port;
+		struct sockaddr_in _address;
+		char _buffer[1024];
 		std::string _password;
 		std::vector<Channel> _channels;
 		std::vector<Client> _clients;
+		fd_set _readfds;
 	public:
-		Server(void);
-		Server(std::string name, std::string password);
+		Server(char const *argv1, char const *argv2);
+		// Server(std::string name, std::string password);
 		virtual ~Server(void);
+
 		void Run(void);
+		void Init(void);
+		void ProcessNewClient(void);
 
 		std::string GetName(void);
 		std::string GetPassword(void);
@@ -24,6 +36,8 @@ class Server {
 		void SetPassword(std::string password);
 		void SetChannels(std::vector<Channel> channels);
 		void SetClients(std::vector<Client> clients);
+
+		bool isServerRunning(int port);
 
 		void AddChannel(Channel channel);
 		void AddClient(Client client);

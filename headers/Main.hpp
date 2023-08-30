@@ -13,10 +13,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
+#include <netdb.h>
+#include <fcntl.h>
+#include <algorithm>
 
 #include "Utils.hpp"
 #include "Channel.hpp"
 #include "Client.hpp"
 #include "Server.hpp"
-
-#define PORT 8080
