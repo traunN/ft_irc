@@ -1,6 +1,11 @@
 #include "Main.hpp"
+#include <netdb.h>
 
-int	main(int argc, char **argv) {
+#define MY_PORT "8080"
+#define BACKLOG 10
+
+int	main(int argc, char **argv)
+{
 	try {
 		utils::ParseArgs(argc, argv);
 	}
