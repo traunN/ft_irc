@@ -19,8 +19,7 @@ Server::Server(char const *argv1, char const *argv2)
 	}
 	else
 	{
-		std::cout <<"Server is already running" << std::endl;
-		return ;
+		throw std::runtime_error("Server is already running");
 	}
 }
 
@@ -63,6 +62,7 @@ void Server::ProcessNewClient(void)
 	}
 	std::cout << "New user connected" << std::endl;
 	this->_valread = recv(this->_new_socket, this->_buffer, 1024, 0);
+	this->_buffer[this->_valread] = '\0';
 	// send(this->_new_socket, this->_buffer, 1024, 0);
 	// Add the new client socket to the set and vector
 	FD_SET(this->_new_socket, &this->_readfds);

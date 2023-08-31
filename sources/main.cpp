@@ -5,7 +5,13 @@ int main(int argc, char const* argv[])
 {
 	(void)argc;
 	(void)argv;
-	Server server(argv[1], argv[2]);
+	try{
+		Server server(argv[1], argv[2]);
+	}
+	catch (std::exception &e) {
+		std::cerr << e.what() << std::endl;
+		return (1);
+	}
 	return 0;
 }
 
