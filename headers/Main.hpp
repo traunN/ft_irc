@@ -21,5 +21,3 @@
 #include "Channel.hpp"
 #include "Client.hpp"
 #include "Server.hpp"
-
-#define PORT 8080

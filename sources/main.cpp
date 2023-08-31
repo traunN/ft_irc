@@ -1,4 +1,9 @@
 #include "Main.hpp"
+#include <netdb.h>
+#include <fcntl.h>
+#include <algorithm>
+
+#define PORT 8080
 
 #define PORT 8080
 
@@ -6,6 +11,7 @@ int main(int argc, char const* argv[])
 {
 	(void)argc;
 	(void)argv;
+<<<<<<< HEAD
 	int server_fd, new_socket, valread;
 	struct sockaddr_in address;
 	int opt = 1;
@@ -113,6 +119,10 @@ int main(int argc, char const* argv[])
     close(server_fd);
 
     return 0;
+=======
+	Server server(argv[1], argv[2]);
+	return 0;
+>>>>>>> refs/remotes/origin/qstrql
 }
 
 // try {

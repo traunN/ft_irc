@@ -1,18 +1,21 @@
 #pragma once
 
-#include <iostream>
-#include <exception>
-#include <string>
+#include "Main.hpp"
 
 class Client
 {
 	private:
+		int _socket;
 		std::string _username;
 		std::string _password;
 	public:
-		Client(void);
-		Client(std::string username, std::string password);
+		Client(std::string _username, std::string _password);
+		Client(int socket, std::string _username, std::string _password);
+		Client(Client const &src);
 		virtual ~Client(void);
+
+		Client	&operator=(Client const &rhs);
+		
 		// void	SetNickname(std::string nickname);
 		void	SetUsername(std::string username);
 		// void	SetRealname(std::string realname);
@@ -20,6 +23,7 @@ class Client
 		// void	SetHostname(std::string hostname);
 		// std::string	GetNickname(void);
 		std::string	GetUsername(void);
+		int			GetSocket(void);
 		// std::string	GetRealname(void);
 		std::string	GetPassword(void);
 		// std::string	GetHostname(void);

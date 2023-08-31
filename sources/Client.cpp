@@ -1,9 +1,25 @@
 #include "Client.hpp"
 
-Client::Client(void) {
+Client::Client(std::string username, std::string password): _username(username), _password(password){
 }
 
-Client::Client(std::string username, std::string password) : _username(username), _password(password) {
+Client::Client(int socket, std::string username, std::string password): _username(username), _password(password){
+	this->_socket = socket;
+}
+
+Client::Client(Client const &src) {
+	*this = src;
+}
+
+Client	&Client::operator=(Client const &rhs)
+{
+	if (this != &rhs)
+	{
+		this->_username = rhs._username;
+		this->_password = rhs._password;
+		this->_socket = rhs._socket;
+	}
+	return (*this);
 }
 
 Client::~Client(void) {
@@ -43,6 +59,10 @@ std::string	Client::GetUsername(void) {
 
 std::string	Client::GetPassword(void) {
 	return (this->_password);
+}
+
+int	Client::GetSocket(void) {
+	return (this->_socket);
 }
 
 // std::string	Client::GetHostname(void) {
