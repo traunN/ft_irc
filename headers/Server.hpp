@@ -13,6 +13,7 @@ class Server {
 		int _addrlen;
 		int _max_fd;
 		int _port;
+		pthread_t _thread;
 		struct sockaddr_in _address;
 		char _buffer[1024];
 		std::string _password;

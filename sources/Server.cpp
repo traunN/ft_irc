@@ -1,5 +1,27 @@
 #include "Server.hpp"
 
+void HandleClient(Client *client)
+{
+	char buffer[1024];
+	int valread;
+	while(true)
+	{
+		memset(buffer, 0, 1024);
+		valread = recv(client->GetSocket(), buffer, 1024, 0);
+		if (valread == 0)
+			break;
+		else if (valread == -1)
+		{
+			perror("recv");
+			exit(EXIT_FAILURE);
+		}
+		buffer[valread] = '\0';
+		std::cout << client->GetUsername() << ": " << buffer;
+	}
+	// Client disconnected
+	std::cout << "Client id " << client->GetSocket() << " disconnected" << std::endl;
+}
+
 Server::Server(char const *argv1, char const *argv2)
 {
 	if (!this->isServerRunning(atoi(argv1)))
@@ -18,20 +40,14 @@ Server::Server(char const *argv1, char const *argv2)
 		this->Run();
 	}
 	else
-	{
 		throw std::runtime_error("Server is already running");
-	}
 }
 
 Server::~Server(void)
 {
-	// Close all the client sockets
 	for (std::vector<Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
-	{
 		close(it->GetSocket());
-	}
 	close(this->_server_fd);
-	// std::cout << "Server destroyed" << std::endl;
 }
 
 bool Server::isServerRunning(int port)
@@ -60,14 +76,19 @@ void Server::ProcessNewClient(void)
 		perror("accept");
 		exit(EXIT_FAILURE);
 	}
-	std::cout << "New user connected" << std::endl;
-	this->_valread = recv(this->_new_socket, this->_buffer, 1024, 0);
-	this->_buffer[this->_valread] = '\0';
-	// send(this->_new_socket, this->_buffer, 1024, 0);
-	// Add the new client socket to the set and vector
+	memset(this->_buffer, 0, 1024);
+	std::cout << "New User id " << this->_new_socket << " connected" << std::endl;
+	Client *client = new Client(this->_new_socket, utils::gen_random(7), "1");
+	this->_clients.push_back(*client);
+	// Create a new thread for the new client
+	if (pthread_create(&this->_thread, NULL, (void *(*)(void *))HandleClient, (void *)client) < 0)
+	{
+		delete client;
+		perror("pthread_create");
+		exit(EXIT_FAILURE);
+	}
+	pthread_detach(this->_thread);
 	FD_SET(this->_new_socket, &this->_readfds);
-	this->_clients.push_back(Client(this->_new_socket, "default", "default"));
-	// Update the maximum file descriptor value
 	if (this->_new_socket > this->_max_fd)
 	{
 		this->_max_fd = this->_new_socket;
@@ -88,14 +109,10 @@ void Server::Run(void)
 			int sd = it->GetSocket();
 			// If valid socket descriptor then add to read list
 			if (sd > 0)
-			{
 				FD_SET(sd, &this->_readfds);
-			}
 			// Highest file descriptor number, need it for the select function
 			if (sd > max_fd)
-			{
 				max_fd = sd;
-			}
 		}
 		// Use select to monitor file descriptors for activity
 		if (select(max_fd + 1, &this->_readfds, NULL, NULL, NULL) < 0)
@@ -108,64 +125,11 @@ void Server::Run(void)
 		{
 			if (FD_ISSET(fd, &this->_readfds))
 			{
-				// Handle activity on the file descriptor
+				// Handle activity on the file descriptor'
 				if (fd == this->_server_fd)
-				{
-					// Activity on the server socket
 					this->ProcessNewClient();
-					std::vector<Client>::iterator it = this->_clients.begin();
-					while (it != this->_clients.end())
-					{
-						if (it->GetSocket() == this->_new_socket)
-						{
-							std::cout << it->GetUsername() << ": " << this->_buffer;
-							break;
-						}
-						it++;
-					}
-					memset(this->_buffer, 0, 1024);
-				}
 				else
 				{
-					// Activity from an existing client
-					// Handle the client's request
-					this->_valread = recv(fd, this->_buffer, 1024, 0);
-					if (this->_valread > 0)
-					{
-						// Data received
-						std::vector<Client>::iterator it = this->_clients.begin();
-						while(it != this->_clients.end())
-						{
-							if (it->GetSocket() == fd)
-							{
-								std::cout << it->GetUsername() << ": " << this->_buffer;
-								break;
-							}
-							it++;
-						}
-						memset(this->_buffer, 0, 1024);
-						// Handle client request here
-						// Example: Send response back to the client
-						// send(fd, this->_buffer, strlen(this->_buffer) + 1, 0);
-					}
-					else if (this->_valread == 0)
-					{
-						// Connection closed by the client
-						std::cout << "Client disconnected" << std::endl;
-						// Close the socket and remove it from the set and vector
-						close(fd);
-						FD_CLR(fd, &this->_readfds);
-						std::vector<Client>::iterator it = this->_clients.begin();
-						while (it != this->_clients.end())
-						{
-							if (it->GetSocket() == fd)
-							{
-								this->_clients.erase(it);
-								break;
-							}
-							it++;
-						}
-					}
 				}
 			}
 		}

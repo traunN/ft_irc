@@ -16,6 +16,8 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <algorithm>
+#include <pthread.h>
+#include <ctime>
 
 #include "Utils.hpp"
 #include "Channel.hpp"
