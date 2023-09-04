@@ -18,7 +18,7 @@ class Server {
 		char _buffer[1024];
 		std::string _password;
 		std::vector<Channel> _channels;
-		std::vector<Client> _clients;
+		std::map<int, Client> _clients;
 		fd_set _readfds;
 	public:
 		Server(char const *argv1, char const *argv2);
@@ -32,11 +32,10 @@ class Server {
 		std::string GetName(void);
 		std::string GetPassword(void);
 		std::vector<Channel> GetChannels(void);
-		std::vector<Client> GetClients(void);
+		std::map<int, Client> GetClients(void);
 		void SetName(std::string name);
 		void SetPassword(std::string password);
 		void SetChannels(std::vector<Channel> channels);
-		void SetClients(std::vector<Client> clients);
 
 		bool isServerRunning(int port);
 

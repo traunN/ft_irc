@@ -1,5 +1,8 @@
 #include "Client.hpp"
 
+Client::Client(void) {
+}
+
 Client::Client(std::string username, std::string password): _username(username), _password(password){
 }
 

@@ -29,7 +29,7 @@ Server::Server(char const *argv1, char const *argv2)
 		(void)argv1;
 		(void)argv2;
 		this->_channels = std::vector<Channel>();
-		this->_clients = std::vector<Client>();
+		this->_clients = std::map<int, Client>();
 		this->_opt = 1;
 		this->_addrlen = sizeof(this->_address);
 		std::stringstream ss(argv1);
@@ -45,8 +45,8 @@ Server::Server(char const *argv1, char const *argv2)
 
 Server::~Server(void)
 {
-	for (std::vector<Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
-		close(it->GetSocket());
+	for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
+		close(it->second.GetSocket());
 	close(this->_server_fd);
 }
 
@@ -70,70 +70,104 @@ bool Server::isServerRunning(int port)
 
 void Server::ProcessNewClient(void)
 {
-	// New client connection
-	if ((this->_new_socket = accept(this->_server_fd, (struct sockaddr *)&this->_address, (socklen_t *)&this->_addrlen)) < 0)
-	{
-		perror("accept");
-		exit(EXIT_FAILURE);
-	}
-	memset(this->_buffer, 0, 1024);
-	std::cout << "New User id " << this->_new_socket << " connected" << std::endl;
-	Client *client = new Client(this->_new_socket, utils::gen_random(7), "1");
-	this->_clients.push_back(*client);
-	// Create a new thread for the new client
-	if (pthread_create(&this->_thread, NULL, (void *(*)(void *))HandleClient, (void *)client) < 0)
-	{
-		delete client;
-		perror("pthread_create");
-		exit(EXIT_FAILURE);
-	}
-	pthread_detach(this->_thread);
-	FD_SET(this->_new_socket, &this->_readfds);
-	if (this->_new_socket > this->_max_fd)
-	{
-		this->_max_fd = this->_new_socket;
-	}
+    // New client connection
+    int new_socket = accept(this->_server_fd, (struct sockaddr *)&this->_address, (socklen_t *)&this->_addrlen);
+    
+    if (new_socket < 0)
+    {
+        perror("accept");
+    }
+    else
+    {
+        std::cout << "New User id " << new_socket << " connected" << std::endl;
+        
+        // Set the new socket as non-blocking
+        int flags = fcntl(new_socket, F_GETFL, 0);
+        if (flags < 0)
+        {
+            perror("fcntl");
+            close(new_socket);
+            return;
+        }
+        if (fcntl(new_socket, F_SETFL, flags | O_NONBLOCK) < 0)
+        {
+            perror("fcntl");
+            close(new_socket);
+            return;
+        }
+        
+        Client *client = new Client(new_socket, utils::gen_random(7), "1");
+        this->_clients.insert(std::pair<int, Client>(new_socket, *client));
+    }
 }
 
 void Server::Run(void)
 {
-	int max_fd = this->_server_fd;
-	while (true)
-	{
-		FD_ZERO(&this->_readfds);
-		FD_SET(this->_server_fd, &this->_readfds);
-		// Add child sockets to set
-		for (std::vector<Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
+    int max_fd = this->_server_fd;
+    std::map <int, int> client_sockets;
+
+    while (true)
+    {
+        FD_ZERO(&this->_readfds);
+        FD_SET(this->_server_fd, &this->_readfds);
+        
+        // Add client sockets to set
+		for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
 		{
-			// Socket descriptor
-			int sd = it->GetSocket();
-			// If valid socket descriptor then add to read list
-			if (sd > 0)
-				FD_SET(sd, &this->_readfds);
-			// Highest file descriptor number, need it for the select function
-			if (sd > max_fd)
-				max_fd = sd;
+			int client_socket = it->second.GetSocket();
+			FD_SET(client_socket, &this->_readfds);
+			if (client_socket > max_fd)
+				max_fd = client_socket;
 		}
-		// Use select to monitor file descriptors for activity
-		if (select(max_fd + 1, &this->_readfds, NULL, NULL, NULL) < 0)
-		{
-			perror("select");
-			exit(EXIT_FAILURE);
-		}
-		// Check for activity on file descriptors
-		for (int fd = 0; fd <= max_fd; fd++)
-		{
-			if (FD_ISSET(fd, &this->_readfds))
-			{
-				// Handle activity on the file descriptor'
-				if (fd == this->_server_fd)
-					this->ProcessNewClient();
-				else
-				{
-				}
-			}
-		}
-	}
+
+        // Use select to monitor file descriptors for activity
+        if (select(max_fd + 1, &this->_readfds, NULL, NULL, NULL) < 0)
+        {
+            perror("select");
+            exit(EXIT_FAILURE);
+        }
+
+        // Check for activity on file descriptors
+        for (int fd = 0; fd <= max_fd; fd++)
+        {
+            if (FD_ISSET(fd, &this->_readfds))
+            {
+                // Handle activity on the file descriptor
+                if (fd == this->_server_fd)
+                {
+                    // New client connection
+                    this->ProcessNewClient();
+                }
+                else
+                {
+                    char buffer[1024];
+                    ssize_t bytesRead = recv(fd, buffer, sizeof(buffer), 0);
+
+                    if (bytesRead <= 0)
+                    {
+                        // Connection closed or error occurred
+                        if (bytesRead == 0)
+						{
+                            std::cout << "Client " << fd << " disconnected" << std::endl;
+							this->_clients.erase(fd);
+						}
+                        else
+                            perror("recv");
+                        // Remove the client from the list
+                        // You should implement a function to remove the client from _clients vector.
+                    }
+                    else
+                    {
+                        // Process the received data from the client
+                        buffer[bytesRead] = '\0';
+						std::cout << this->_clients[fd].GetUsername() << ": " << buffer;
+
+                        // You can implement your message handling logic here.
+                    }
+                }
+            }
+        }
+    }
 }
 
 void Server::Init(void)
@@ -189,7 +223,7 @@ std::vector<Channel> Server::GetChannels(void)
 	return (this->_channels);
 }
 
-std::vector<Client> Server::GetClients(void)
+std::map<int, Client> Server::GetClients(void)
 {
 	return (this->_clients);
 }
@@ -204,10 +238,6 @@ void Server::SetChannels(std::vector<Channel> channels)
 	this->_channels = channels;
 }
 
-void Server::SetClients(std::vector<Client> clients)
-{
-	this->_clients = clients;
-}
 
 void Server::AddChannel(Channel channel)
 {
@@ -216,7 +246,7 @@ void Server::AddChannel(Channel channel)
 
 void Server::AddClient(Client client)
 {
-	this->_clients.push_back(client);
+	this->_clients.insert(std::pair<int, Client>(client.GetSocket(), client));
 }
 
 void Server::RemoveChannel(Channel channel)
@@ -235,10 +265,10 @@ void Server::RemoveChannel(Channel channel)
 
 void Server::RemoveClient(Client client)
 {
-	std::vector<Client>::iterator it = this->_clients.begin();
+	std::map<int, Client>::iterator it = this->_clients.begin();
 	while (it != this->_clients.end())
 	{
-		if (it->GetUsername() == client.GetUsername())
+		if (it->second.GetUsername() == client.GetUsername())
 		{
 			this->_clients.erase(it);
 			break;
@@ -247,21 +277,9 @@ void Server::RemoveClient(Client client)
 	}
 }
 
-std::ostream &operator<<(std::ostream &os, Server &server)
-{
-	os << "Server Password: " << server.GetPassword() << std::endl;
-	os << "Server Channels: " << std::endl;
-	std::vector<Channel> channels = server.GetChannels();
-	for (std::vector<Channel>::iterator it = channels.begin(); it != channels.end(); it++)
-	{
-		os << *it << std::endl;
-	}
-	std::cout << std::endl;
-	os << "Clients: " << std::endl;
-	std::vector<Client> clients = server.GetClients();
-	for (std::vector<Client>::iterator it = clients.begin(); it != clients.end(); it++)
-	{
-		os << *it << std::endl;
-	}
+std::ostream&	operator<<(std::ostream& os, Server& server) {
+	os << "Password: " << server.GetPassword() << std::endl;
+	os << "Channels count: " << server.GetChannels().size() << std::endl;
+	os << "Clients count: " << server.GetClients().size() << std::endl;
 	return (os);
 }
