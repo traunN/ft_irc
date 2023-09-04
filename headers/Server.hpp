@@ -28,6 +28,7 @@ class Server {
 		void Run(void);
 		void Init(void);
 		void ProcessNewClient(void);
+		void CheckActivity(void);
 
 		std::string GetName(void);
 		std::string GetPassword(void);

@@ -60,13 +60,10 @@ bool Server::isServerRunning(int port)
 
 void Server::ProcessNewClient(void)
 {
-	// New client connection
 	int new_socket = accept(this->_server_fd, (struct sockaddr *)&this->_address, (socklen_t *)&this->_addrlen);
 
 	if (new_socket < 0)
-	{
 		throw std::runtime_error("accept");
-	}
 	else
 	{
 		std::cout << "New User id " << new_socket << " connected" << std::endl;
@@ -85,7 +82,6 @@ void Server::ProcessNewClient(void)
 			throw std::runtime_error("fcntl");
 			return;
 		}
-
 		Client *client = new Client(new_socket, utils::gen_random(7), "1");
 		this->_clients.insert(std::pair<int, Client>(new_socket, *client));
 	}
@@ -94,13 +90,11 @@ void Server::ProcessNewClient(void)
 void Server::Run(void)
 {
 	int max_fd = this->_server_fd;
-	std::map<int, int> client_sockets;
 
 	while (true)
 	{
 		FD_ZERO(&this->_readfds);
 		FD_SET(this->_server_fd, &this->_readfds);
-
 		// Add client sockets to set
 		for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
 		{
@@ -109,56 +103,62 @@ void Server::Run(void)
 			if (client_socket > max_fd)
 				max_fd = client_socket;
 		}
-
 		// Use select to monitor file descriptors for activity
 		if (select(max_fd + 1, &this->_readfds, NULL, NULL, NULL) < 0)
 			throw std::runtime_error("select");
+		// If something happened on the master socket, then its an incoming connection
+		if (FD_ISSET(this->_server_fd, &this->_readfds))
+			this->ProcessNewClient();
+		else
+			this->CheckActivity();
+	}
+}
 
-		// Check for activity on file descriptors
-		for (int fd = 0; fd <= max_fd; fd++)
+void Server::CheckActivity(void)
+{
+	std::map<int, Client> disconnected_clients;
+	int client_socket_sender;
+
+	for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
+	{
+		int client_socket = it->second.GetSocket();
+		if (FD_ISSET(client_socket, &this->_readfds))
 		{
-			if (FD_ISSET(fd, &this->_readfds))
+			client_socket_sender = client_socket;
+			// Check if it was for closing, and also read the incoming message
+			int valread;
+			valread = read(client_socket, this->_buffer, 1024);
+			if (valread == 0)
+				disconnected_clients.insert(std::pair<int, Client>(client_socket, it->second));
+			else
 			{
-				// Handle activity on the file descriptor
-				if (fd == this->_server_fd)
+				// Set the string terminating NULL byte on the end of the data read
+				this->_buffer[valread] = '\0';
+				std::cout << this->_clients[client_socket].GetUsername() << ": " << this->_buffer;
+				// Send message to all clients
+				for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
 				{
-					// New client connection
-					this->ProcessNewClient();
-				}
-				else
-				{
-					char buffer[1024];
-					ssize_t bytesRead = recv(fd, buffer, sizeof(buffer), 0);
-					if (bytesRead <= 0)
+					int client_socket = it->second.GetSocket();
+					if (client_socket != client_socket_sender)
 					{
-						// Connection closed or error occurred
-						if (bytesRead == 0)
-						{
-							std::cout << this->_clients[fd].GetUsername() << " disconnected" << std::endl;
-							this->_clients.erase(fd);
-						}
-						else
-							throw std::runtime_error("recv");
-						// Remove the client from the list
-						// You should implement a function to remove the client from _clients vector.
-					}
-					else
-					{
-						// Process the received data from the client
-						buffer[bytesRead] = '\0';
-						std::cout << this->_clients[fd].GetUsername() << ": " << buffer;
-
-						// You can implement your message handling logic here.
+						std::string message = this->_clients[client_socket_sender].GetUsername() + ": " + this->_buffer;
+						send(client_socket, message.c_str(), message.length(), 0);
 					}
 				}
 			}
 		}
 	}
+	// Close disconnected clients
+	for (std::map<int, Client>::iterator it = disconnected_clients.begin(); it != disconnected_clients.end(); it++)
+	{
+		std::cout << disconnected_clients[it->first].GetUsername() << " disconnected" << std::endl;
+		close(it->first);
+		this->_clients.erase(it->second.GetSocket());
+	}
 }
 
 void Server::Init(void)
 {
-	// Creating socket file descriptor
 	if ((this->_server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 		throw std::runtime_error("socket failed");
 	int flags = fcntl(this->_server_fd, F_GETFL, 0);
@@ -166,14 +166,11 @@ void Server::Init(void)
 	throw std::runtime_error("fcntl");
 	if (fcntl(this->_server_fd, F_SETFL, flags | O_NONBLOCK) == -1)
 		throw std::runtime_error("fcntl");
-	// Forcefully attaching socket to the port 8080
 	if (setsockopt(this->_server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &_opt, sizeof(_opt)))
 		throw std::runtime_error("setsockopt");
 	this->_address.sin_family = AF_INET;
 	this->_address.sin_addr.s_addr = INADDR_ANY;
 	this->_address.sin_port = htons(this->_port);
-
-	// Forcefully attaching socket to the port 8080
 	if (bind(this->_server_fd, (struct sockaddr *)&this->_address, sizeof(this->_address)) < 0)
 		throw std::runtime_error("bind failed");
 	if (listen(this->_server_fd, 3) < 0)
