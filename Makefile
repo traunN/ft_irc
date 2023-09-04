@@ -19,10 +19,12 @@ SRCDIR = sources/
 OBJDIR = .objects/
 
 SRC =	$(SRCDIR)main.cpp\
+		$(SRCDIR)Password.cpp\
 		$(SRCDIR)Utils.cpp\
 		$(SRCDIR)Client.cpp\
 		$(SRCDIR)Channel.cpp\
 		$(SRCDIR)Server.cpp\
+
 		# Commands.cpp\
 		
 OBJ = $(patsubst $(SRCDIR)%.cpp, $(OBJDIR)%.o, $(SRC))

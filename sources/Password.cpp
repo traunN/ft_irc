@@ -1,5 +1,7 @@
 #include <Password.hpp>
 
+Password::Password() {}
+
 Password::Password(std::string password) {
 	this->_hashedPassword = hashPassword(password);
 }

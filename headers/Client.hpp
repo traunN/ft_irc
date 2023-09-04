@@ -26,7 +26,7 @@ class Client
 		std::string	GetUsername(void);
 		int			GetSocket(void);
 		// std::string	GetRealname(void);
-		std::string	GetPassword(void);
+		Password	GetPassword(void);
 		// std::string	GetHostname(void);
 };
 
