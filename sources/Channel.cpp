@@ -20,10 +20,6 @@ int	Channel::GetUsersCount(void) {
 	return (this->_usersCount);
 }
 
-std::string	Channel::GetPassword(void) {
-	return (this->_password);
-}
-
 std::vector<Client>	Channel::GetClients(void) {
 	return (this->_clients);
 }

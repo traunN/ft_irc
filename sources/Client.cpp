@@ -57,7 +57,7 @@ std::string	Client::GetUsername(void) {
 // 	return (this->_realname);
 // }
 
-std::string	Client::GetPassword(void) {
+Password Client::GetPassword(void) {
 	return (this->_password);
 }
 
@@ -73,7 +73,7 @@ std::ostream&	operator<<(std::ostream& os, Client& client) {
 	// os << "Nickname: " << client.GetNickname() << std::endl;
 	os << "Username: " << client.GetUsername() << std::endl;
 	// os << "Realname: " << client.GetRealname() << std::endl;
-	os << "Password: " << client.GetPassword() << std::endl;
+	// os << "Password: " << client.GetPassword() << std::endl;
 	// os << "Hostname: " << client.GetHostname() << std::endl;
 	return (os);
 }

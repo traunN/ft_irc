@@ -21,8 +21,8 @@
 #include <pthread.h>
 #include <ctime>
 
+#include "Password.hpp"
 #include "Utils.hpp"
 #include "Channel.hpp"
 #include "Client.hpp"
-#include "Password.hpp"
 #include "Server.hpp"

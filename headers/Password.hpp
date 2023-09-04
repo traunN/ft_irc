@@ -2,11 +2,11 @@
 
 #include "Main.hpp"
 
-
 class Password {
     private:
         std::string _hashedPassword;
     public:
+        Password();
         Password(std::string password);
         virtual ~Password();
         std::string getHashedPassword() const;
