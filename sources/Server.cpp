@@ -127,7 +127,7 @@ void Server::CheckActivity(void)
 			client_socket_sender = client_socket;
 			// Check if it was for closing, and also read the incoming message
 			int valread;
-			valread = read(client_socket, this->_buffer, 1024);
+			valread = recv(client_socket, this->_buffer, 1024, 0);
 			if (valread == 0)
 				disconnected_clients.insert(std::pair<int, Client>(client_socket, it->second));
 			else
