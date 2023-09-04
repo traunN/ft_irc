@@ -6,7 +6,7 @@ Channel::Channel(std::string name, std::string password) : _name(name), _passwor
 	this->_hasUsersLimit = false;
 	this->_userLimit = 0;
 	this->_usersCount = 0;
-	this->_clients = std::vector<Client>();
+	this->_clients = std::map<int, Client>();
 }
 
 Channel::~Channel(void) {
@@ -20,7 +20,11 @@ int	Channel::GetUsersCount(void) {
 	return (this->_usersCount);
 }
 
-std::vector<Client>	Channel::GetClients(void) {
+std::string	Channel::GetPassword(void) {
+	return (this->_password);
+}
+
+std::map<int, Client>	Channel::GetClients(void) {
 	return (this->_clients);
 }
 
@@ -32,29 +36,22 @@ void	Channel::SetPassword(std::string password) {
 	this->_password = password;
 }
 
-void	Channel::SetClients(std::vector<Client> clients) {
-	this->_clients = clients;
-}
-
 void	Channel::AddClient(Client client) {
-	this->_clients.push_back(client);
+	this->_clients.insert(std::pair<int, Client>(client.GetSocket(), client));
 	this->_usersCount++;
 }
 
-Client	&Channel::operator[](unsigned int index)
-{
-	if (_clients.size() == 0)
-		throw std::runtime_error("Array is empty");
-	if (index >= _clients.size())
-		throw std::runtime_error("Array is full");
-	return (_clients[index]);
+Client	&Channel::operator[](unsigned int index) {
+	std::map<int, Client>::iterator it = this->_clients.begin();
+	for (unsigned int i = 0; i < index; i++) {
+		it++;
+	}
+	return (it->second);
 }
 
-
 std::ostream&	operator<<(std::ostream& os, Channel& channel) {
-	os << "Channel " << channel.GetName() << " created\n";
-	for (int i = 0; i < channel.GetUsersCount(); i++) {
-		os << "Client " << channel.GetClients()[i].GetUsername() << " joined\n";
-	}
+	os << "Channel: " << channel.GetName() << std::endl;
+	os << "Password: " << channel.GetPassword() << std::endl;
+	os << "Users count: " << channel.GetUsersCount() << std::endl;
 	return (os);
 }

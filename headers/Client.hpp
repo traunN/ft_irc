@@ -8,6 +8,7 @@ class Client
 		int _socket;
 		std::string _username;
 		std::string _password;
+		// Password _password;
 	public:
 		Client(void);
 		Client(std::string _username, std::string _password);
@@ -26,7 +27,7 @@ class Client
 		std::string	GetUsername(void);
 		int			GetSocket(void);
 		// std::string	GetRealname(void);
-		Password	GetPassword(void);
+		std::string	GetPassword(void);
 		// std::string	GetHostname(void);
 };
 

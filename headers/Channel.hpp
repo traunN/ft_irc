@@ -13,8 +13,9 @@ class Channel {
         size_t _userLimit;
 		int			_usersCount;
 		std::string _name;
-		Password _password;
-		std::vector<Client> _clients;
+		std::string _password;
+		// Password _password;
+		std::map<int, Client> _clients;
     public:
         Channel(std::string name, std::string password);
         virtual ~Channel(void);
@@ -24,10 +25,9 @@ class Channel {
 		std::string GetName(void);
 		int GetUsersCount(void);
 		std::string GetPassword(void);
-		std::vector<Client> GetClients(void);
+		std::map<int, Client> GetClients(void);
 		void SetName(std::string name);
 		void SetPassword(std::string password);
-		void SetClients(std::vector<Client> clients);
 		void AddClient(Client client);
 };
 

@@ -18,11 +18,11 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <algorithm>
-#include <pthread.h>
+#include <map>
 #include <ctime>
 
-#include "Password.hpp"
 #include "Utils.hpp"
+// #include "Password.hpp"
 #include "Channel.hpp"
 #include "Client.hpp"
 #include "Server.hpp"

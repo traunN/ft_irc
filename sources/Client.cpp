@@ -60,7 +60,7 @@ std::string	Client::GetUsername(void) {
 // 	return (this->_realname);
 // }
 
-Password Client::GetPassword(void) {
+std::string Client::GetPassword(void) {
 	return (this->_password);
 }
 
