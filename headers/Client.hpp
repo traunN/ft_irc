@@ -7,7 +7,7 @@ class Client
 	private:
 		int _socket;
 		std::string _username;
-		std::string _password;
+		Password _password;
 	public:
 		Client(std::string _username, std::string _password);
 		Client(int socket, std::string _username, std::string _password);

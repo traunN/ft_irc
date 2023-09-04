@@ -39,7 +39,7 @@ $(OBJDIR)%.o: $(SRCDIR)%.cpp
 	@$(cc) $(INCLUDES) -c $< -o $@
 
 $(NAME): $(OBJ)
-	@$(cc) $^ -o $@
+	@$(cc) $^ -o $@ -lssl -lcrypto
 	@echo "$(green)$(NAME)$(reset) Created!"
 
 $(OBJ): | $(OBJDIR)

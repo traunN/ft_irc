@@ -13,7 +13,7 @@ class Channel {
         size_t _userLimit;
 		int			_usersCount;
 		std::string _name;
-		std::string _password;
+		Password _password;
 		std::vector<Client> _clients;
     public:
         Channel(std::string name, std::string password);
