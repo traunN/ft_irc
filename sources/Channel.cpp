@@ -1,7 +1,7 @@
 #include "Channel.hpp"
 #include "Client.hpp"
 
-Channel::Channel(std::string name, Client &creator, std::string password) : _name(name), _password(password), _creator(creator.GetUsername()), client_count(0) {
+Channel::Channel(std::string name, Client &creator, std::string password) : _name(name), _password(password), _creator(creator.getUsername()), client_count(0) {
 	this->addClient(creator);
 	this->addOp(creator);
 	this->invite_only = false;
@@ -47,21 +47,21 @@ std::string const	&Channel::getModes(void) const {
 }
 
 void Channel::addClient(Client &client) {
-	this->_clients.insert(std::pair<std::string, Client *>(client.GetUsername(), &client));
+	this->_clients.insert(std::pair<std::string, Client *>(client.getUsername(), &client));
 	this->client_count++;
 }
 
 void Channel::removeClient(Client &client) {
-	this->_clients.erase(client.GetUsername());
+	this->_clients.erase(client.getUsername());
 	this->client_count--;
 }
 
 void Channel::addOp(Client &client) {
-	this->op_clients.insert(client.GetUsername());
+	this->op_clients.insert(client.getUsername());
 }
 
 void Channel::removeOp(Client &client) {
-	this->op_clients.erase(client.GetUsername());
+	this->op_clients.erase(client.getUsername());
 }
 
 bool Channel::isInviteOnly(void) const {
@@ -81,15 +81,15 @@ bool Channel::hasClientLimit(void) const {
 }
 
 bool Channel::isOp(Client &client) const {
-	return (this->op_clients.find(client.GetUsername()) != this->op_clients.end());
+	return (this->op_clients.find(client.getUsername()) != this->op_clients.end());
 }
 
 bool Channel::isInvited(Client &client) const {
-	return (this->invited_clients.find(client.GetUsername()) != this->invited_clients.end());
+	return (this->invited_clients.find(client.getUsername()) != this->invited_clients.end());
 }
 
 bool Channel::isClientInChannel(Client &client) const {
-	return (this->_clients.find(client.GetUsername()) != this->_clients.end());
+	return (this->_clients.find(client.getUsername()) != this->_clients.end());
 }
 
 bool Channel::isFull(void) const {

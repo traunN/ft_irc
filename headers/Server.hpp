@@ -30,13 +30,13 @@ class Server {
 		void ProcessNewClient(void);
 		void CheckActivity(void);
 
-		std::string GetName(void);
-		std::string GetPassword(void);
-		std::vector<Channel> GetChannels(void);
-		std::map<int, Client> GetClients(void);
-		void SetName(std::string name);
-		void SetPassword(std::string password);
-		void SetChannels(std::vector<Channel> channels);
+		std::string getName(void);
+		std::string getPassword(void);
+		std::vector<Channel> getChannels(void);
+		std::map<int, Client> getClients(void);
+		void setName(std::string name);
+		void setPassword(std::string password);
+		void setChannels(std::vector<Channel> channels);
 
 		bool isServerRunning(int port);
 

@@ -36,7 +36,7 @@ Server::Server(char const *argv1, char const *argv2)
 Server::~Server(void)
 {
 	for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
-		close(it->second.GetSocket());
+		close(it->second.getSocket());
 	close(this->_server_fd);
 }
 
@@ -66,19 +66,19 @@ void Server::ProcessNewClient(void)
 		throw std::runtime_error("accept");
 	else
 	{
-		char user_nickname[1024];
-		send(new_socket, "Enter your nickname: ", strlen("Enter your nickname: "), 0);
-		int valread = recv(new_socket, user_nickname, 1024, 0);
-		if (valread == 0)
-		{
-			close(new_socket);
-			throw std::runtime_error("recv");
-			return;
-		}
-		//replace "\n" with "\0"
-		user_nickname[valread - 1] = '\0';
+		// char user_nickname[1024];
+		// send(new_socket, "Enter your nickname: ", strlen("Enter your nickname: "), 0);
+		// int valread = recv(new_socket, user_nickname, 1024, 0);
+		// if (valread == 0)
+		// {
+		// 	close(new_socket);
+		// 	throw std::runtime_error("recv");
+		// 	return;
+		// }
+		// //replace "\n" with "\0"
+		// user_nickname[valread - 1] = '\0';
 		std::cout << "New User id " << new_socket << " connected" << std::endl;
-		// Set the new socket as non-blocking
+		// set the new socket as non-blocking
 		int flags = fcntl(new_socket, F_GETFL, 0);
 		if (flags < 0)
 		{
@@ -93,7 +93,7 @@ void Server::ProcessNewClient(void)
 			throw std::runtime_error("fcntl");
 			return;
 		}
-		Client *client = new Client(new_socket, user_nickname, "1");
+		Client *client = new Client(new_socket, "default", "1");
 		this->_clients.insert(std::pair<int, Client>(new_socket, *client));
 	}
 }
@@ -109,7 +109,7 @@ void Server::Run(void)
 		// Add client sockets to set
 		for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
 		{
-			int client_socket = it->second.GetSocket();
+			int client_socket = it->second.getSocket();
 			FD_SET(client_socket, &this->_readfds);
 			if (client_socket > max_fd)
 				max_fd = client_socket;
@@ -132,7 +132,7 @@ void Server::CheckActivity(void)
 
 	for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
 	{
-		int client_socket = it->second.GetSocket();
+		int client_socket = it->second.getSocket();
 		if (FD_ISSET(client_socket, &this->_readfds))
 		{
 			client_socket_sender = client_socket;
@@ -143,16 +143,16 @@ void Server::CheckActivity(void)
 				disconnected_clients.insert(std::pair<int, Client>(client_socket, it->second));
 			else
 			{
-				// Set the string terminating NULL byte on the end of the data read
+				// set the string terminating NULL byte on the end of the data read
 				this->_buffer[valread] = '\0';
-				std::cout << this->_clients[client_socket].GetUsername() << ": " << this->_buffer;
+				std::cout << this->_clients[client_socket].getUsername() << ": " << this->_buffer;
 				// Send message to all clients
 				for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
 				{
-					int client_socket = it->second.GetSocket();
+					int client_socket = it->second.getSocket();
 					if (client_socket != client_socket_sender)
 					{
-						std::string message = this->_clients[client_socket_sender].GetUsername() + ": " + this->_buffer;
+						std::string message = this->_clients[client_socket_sender].getUsername() + ": " + this->_buffer;
 						send(client_socket, message.c_str(), message.length(), 0);
 					}
 				}
@@ -162,9 +162,9 @@ void Server::CheckActivity(void)
 	// Close disconnected clients
 	for (std::map<int, Client>::iterator it = disconnected_clients.begin(); it != disconnected_clients.end(); it++)
 	{
-		std::cout << disconnected_clients[it->first].GetUsername() << " disconnected" << std::endl;
+		std::cout << disconnected_clients[it->first].getUsername() << " disconnected" << std::endl;
 		close(it->first);
-		this->_clients.erase(it->second.GetSocket());
+		this->_clients.erase(it->second.getSocket());
 	}
 }
 
@@ -188,27 +188,27 @@ void Server::Init(void)
 		throw std::runtime_error("listen");
 }
 
-std::string Server::GetPassword(void)
+std::string Server::getPassword(void)
 {
 	return (this->_password);
 }
 
-std::vector<Channel> Server::GetChannels(void)
+std::vector<Channel> Server::getChannels(void)
 {
 	return (this->_channels);
 }
 
-std::map<int, Client> Server::GetClients(void)
+std::map<int, Client> Server::getClients(void)
 {
 	return (this->_clients);
 }
 
-void Server::SetPassword(std::string password)
+void Server::setPassword(std::string password)
 {
 	this->_password = password;
 }
 
-void Server::SetChannels(std::vector<Channel> channels)
+void Server::setChannels(std::vector<Channel> channels)
 {
 	this->_channels = channels;
 }
@@ -220,7 +220,7 @@ void Server::AddChannel(Channel channel)
 
 void Server::AddClient(Client client)
 {
-	this->_clients.insert(std::pair<int, Client>(client.GetSocket(), client));
+	this->_clients.insert(std::pair<int, Client>(client.getSocket(), client));
 }
 
 void Server::RemoveChannel(Channel channel)
@@ -228,7 +228,7 @@ void Server::RemoveChannel(Channel channel)
 	std::vector<Channel>::iterator it = this->_channels.begin();
 	while (it != this->_channels.end())
 	{
-		if (it->GetName() == channel.GetName())
+		if (it->getName() == channel.getName())
 		{
 			this->_channels.erase(it);
 			break;
@@ -242,7 +242,7 @@ void Server::RemoveClient(Client client)
 	std::map<int, Client>::iterator it = this->_clients.begin();
 	while (it != this->_clients.end())
 	{
-		if (it->second.GetUsername() == client.GetUsername())
+		if (it->second.getUsername() == client.getUsername())
 		{
 			this->_clients.erase(it);
 			break;
@@ -253,8 +253,8 @@ void Server::RemoveClient(Client client)
 
 std::ostream &operator<<(std::ostream &os, Server &server)
 {
-	os << "Password: " << server.GetPassword() << std::endl;
-	os << "Channels count: " << server.GetChannels().size() << std::endl;
-	os << "Clients count: " << server.GetClients().size() << std::endl;
+	os << "Password: " << server.getPassword() << std::endl;
+	os << "Channels count: " << server.getChannels().size() << std::endl;
+	os << "Clients count: " << server.getClients().size() << std::endl;
 	return (os);
 }
