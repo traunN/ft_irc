@@ -6,29 +6,53 @@ class Client;
 
 class Channel {
     private:
-        bool _isInviteOnly;
-        bool _hasPassword;
-        bool _hasUsersLimit;
-
-        size_t _userLimit;
-		int			_usersCount;
 		std::string _name;
+		std::map<std::string, Client *> _clients;
+		//Password _password;
 		std::string _password;
-		// Password _password;
-		std::map<int, Client> _clients;
-    public:
-        Channel(std::string name, std::string password);
-        virtual ~Channel(void);
+		std::string _mode;
 
-		Client		&operator[](unsigned int index);
+		std::string _topic;
+		std::string _creator;
+		std::set<std::string> op_clients; //KICK, INVITE, TOPIC, MODE(i : invite only, t: topic, k: password, o: give/take op, l: client limit)
+		std::set<std::string> invited_clients;
 
-		std::string GetName(void);
-		int GetUsersCount(void);
-		std::string GetPassword(void);
-		std::map<int, Client> GetClients(void);
-		void SetName(std::string name);
-		void SetPassword(std::string password);
-		void AddClient(Client client);
+		bool invite_only;
+		bool restrict_topic;
+		bool has_password;
+		bool has_clientlimit;
+
+		size_t client_limit;
+		size_t client_count;
+	public:
+		//Channel(std::string name, Client &creator, Password &password);
+		Channel(std::string name, Client &creator, std::string password);
+		virtual ~Channel(void);
+
+		void 				setName(std::string name);
+		void 				setTopic(std::string topic);
+		void 				setCreator(std::string creator);
+		void 				setModes(std::string password);
+		std::string const	&getName(void) const;
+		std::string const	&getTopic(void) const;
+		std::string const	&getCreator(void) const;
+		std::string const	&getModes(void) const;
+
+		void 				addMode(std::string mode);
+		void 				removeMode(std::string mode);
+		void 				addClient(Client &client);
+		void 				removeClient(Client &client);
+		void 				addOp(Client &client);
+		void 				removeOp(Client &client);
+
+		bool 				isInviteOnly(void) const;
+		bool 				isRestrictedTopic(void) const;
+		bool 				hasPassword(void) const;
+		bool 				hasClientLimit(void) const;
+		bool 				isOp(Client &client) const;
+		bool 				isInvited(Client &client) const;
+		bool 				isClientInChannel(Client &client) const;
+		bool 				isFull(void) const;
 };
 
 std::ostream&	operator<<(std::ostream& os, Channel& channel);
