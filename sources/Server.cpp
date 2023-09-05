@@ -66,6 +66,17 @@ void Server::ProcessNewClient(void)
 		throw std::runtime_error("accept");
 	else
 	{
+		char user_nickname[1024];
+		send(new_socket, "Enter your nickname: ", strlen("Enter your nickname: "), 0);
+		int valread = recv(new_socket, user_nickname, 1024, 0);
+		if (valread == 0)
+		{
+			close(new_socket);
+			throw std::runtime_error("recv");
+			return;
+		}
+		//replace "\n" with "\0"
+		user_nickname[valread - 1] = '\0';
 		std::cout << "New User id " << new_socket << " connected" << std::endl;
 		// Set the new socket as non-blocking
 		int flags = fcntl(new_socket, F_GETFL, 0);
@@ -82,7 +93,7 @@ void Server::ProcessNewClient(void)
 			throw std::runtime_error("fcntl");
 			return;
 		}
-		Client *client = new Client(new_socket, utils::gen_random(7), "1");
+		Client *client = new Client(new_socket, user_nickname, "1");
 		this->_clients.insert(std::pair<int, Client>(new_socket, *client));
 	}
 }
