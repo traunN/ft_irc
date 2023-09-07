@@ -59,8 +59,6 @@ void Channel::addClient(Client &client) {
 		return ;
 	else if (isFull())
 		return ;
-	else if (this->has_password && client.getPassword() != this->_password)
-		return ;
 	else if (this->has_clientlimit && this->client_count >= this->client_limit)
 		return ;
 	else if (this->invite_only && !isInvited(client))
