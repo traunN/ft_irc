@@ -33,10 +33,12 @@ class Channel {
 		void 				setTopic(std::string topic);
 		void 				setCreator(std::string creator);
 		void 				setModes(std::string password);
+		void				setClientLimit(size_t limit);
 		std::string const	&getName(void) const;
 		std::string const	&getTopic(void) const;
 		std::string const	&getCreator(void) const;
 		std::string const	&getModes(void) const;
+		size_t				getClientLimit(void) const;
 
 		void 				addMode(std::string mode);
 		void 				removeMode(std::string mode);

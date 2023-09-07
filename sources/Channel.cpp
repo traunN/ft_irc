@@ -30,6 +30,10 @@ void Channel::setModes(std::string modes) {
 	this->_mode = modes;
 }
 
+void Channel::setClientLimit(size_t limit) {
+	this->client_limit = limit;
+}
+
 std::string const	&Channel::getName(void) const {
 	return (this->_name);
 }
@@ -46,21 +50,47 @@ std::string const	&Channel::getModes(void) const {
 	return (this->_mode);
 }
 
+size_t	Channel::getClientLimit(void) const {
+	return (this->client_limit);
+}
+
 void Channel::addClient(Client &client) {
+	if (isClientInChannel(client))
+		return ;
+	else if (isFull())
+		return ;
+	else if (this->has_password && client.getPassword() != this->_password)
+		return ;
+	else if (this->has_clientlimit && this->client_count >= this->client_limit)
+		return ;
+	else if (this->invite_only && !isInvited(client))
+		return ;
 	this->_clients.insert(std::pair<std::string, Client *>(client.getUsername(), &client));
 	this->client_count++;
 }
 
 void Channel::removeClient(Client &client) {
+	if (!isClientInChannel(client))
+		return ;
 	this->_clients.erase(client.getUsername());
 	this->client_count--;
 }
 
 void Channel::addOp(Client &client) {
+	if (client.getUsername() == this->_creator)
+		return ;
+	else if (!isClientInChannel(client))
+		return ;
+	else if (isOp(client))
+		return ;
 	this->op_clients.insert(client.getUsername());
 }
 
 void Channel::removeOp(Client &client) {
+	if (!isClientInChannel(client))
+		return ;
+	else if (!isOp(client))
+		return ;
 	this->op_clients.erase(client.getUsername());
 }
 
@@ -81,15 +111,21 @@ bool Channel::hasClientLimit(void) const {
 }
 
 bool Channel::isOp(Client &client) const {
-	return (this->op_clients.find(client.getUsername()) != this->op_clients.end());
+	if (this->op_clients.find(client.getUsername()) != this->op_clients.end())
+		return (true);
+	return (false);
 }
 
 bool Channel::isInvited(Client &client) const {
-	return (this->invited_clients.find(client.getUsername()) != this->invited_clients.end());
+	if (this->invited_clients.find(client.getUsername()) != this->invited_clients.end())
+		return (true);
+	return (false);
 }
 
 bool Channel::isClientInChannel(Client &client) const {
-	return (this->_clients.find(client.getUsername()) != this->_clients.end());
+	if (this->_clients.find(client.getUsername()) != this->_clients.end())
+		return (true);
+	return (false);
 }
 
 bool Channel::isFull(void) const {
