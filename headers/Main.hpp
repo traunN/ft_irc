@@ -21,6 +21,7 @@
 #include <map>
 #include <set>
 #include <ctime>
+#include <errno.h>
 
 #include "Utils.hpp"
 // #include "Password.hpp"

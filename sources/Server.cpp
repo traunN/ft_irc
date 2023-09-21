@@ -13,20 +13,24 @@ Server::Server(char const *argv1, char const *argv2)
 		std::stringstream ss(argv1);
 		ss >> this->_port;
 		this->_password = argv2;
-		try {
+		try
+		{
 			this->Init();
 		}
-		catch (std::exception &e) {
+		catch (std::exception &e)
+		{
 			std::cerr << e.what() << std::endl;
-			return ;
+			return;
 		}
-		std:: cout << "Server is running on port " << this->_port << std::endl;
-		try {
+		std::cout << "Server is running on port " << this->_port << std::endl;
+		try
+		{
 			this->Run();
 		}
-		catch (std::exception &e) {
+		catch (std::exception &e)
+		{
 			std::cerr << e.what() << std::endl;
-			return ;
+			return;
 		}
 	}
 	else
@@ -60,42 +64,24 @@ bool Server::isServerRunning(int port)
 
 void Server::ProcessNewClient(void)
 {
-	int new_socket = accept(this->_server_fd, (struct sockaddr *)&this->_address, (socklen_t *)&this->_addrlen);
-
-	if (new_socket < 0)
+	// Use select for non blocking
+	int new_socket;
+	if ((new_socket = accept(this->_server_fd, (struct sockaddr *)&this->_address, (socklen_t *)&this->_addrlen)) < 0)
 		throw std::runtime_error("accept");
-	else
-	{
-		// char user_nickname[1024];
-		// send(new_socket, "Enter your nickname: ", strlen("Enter your nickname: "), 0);
-		// int valread = recv(new_socket, user_nickname, 1024, 0);
-		// if (valread == 0)
-		// {
-		// 	close(new_socket);
-		// 	throw std::runtime_error("recv");
-		// 	return;
-		// }
-		// //replace "\n" with "\0"
-		// user_nickname[valread - 1] = '\0';
-		std::cout << "New User id " << new_socket << " connected" << std::endl;
-		// set the new socket as non-blocking
-		int flags = fcntl(new_socket, F_GETFL, 0);
-		if (flags < 0)
-		{
-			close(new_socket);
-			throw std::runtime_error("fcntl");
-			return;
-		}
-		if (fcntl(new_socket, F_SETFL, flags | O_NONBLOCK) < 0)
-		{
-			
-			close(new_socket);
-			throw std::runtime_error("fcntl");
-			return;
-		}
-		Client *client = new Client(new_socket, "default", "1");
-		this->_clients.insert(std::pair<int, Client>(new_socket, *client));
-	}
+	int flags = fcntl(new_socket, F_GETFL, 0);
+	if (flags == -1)
+		throw std::runtime_error("fcntl");
+	if (fcntl(new_socket, F_SETFL, flags | O_NONBLOCK) == -1)
+		throw std::runtime_error("fcntl");
+	// Send welcome message
+	std::string message = "Enter PASS :\n";
+	int bytes_sent = send(new_socket, message.c_str(), message.length(), 0);
+	if (bytes_sent < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
+		throw std::runtime_error("send");
+	
+	// Add the new client to the map with an empty username and password
+	Client client(new_socket, "", "");
+	this->_clients.insert(std::pair<int, Client>(new_socket, client));
 }
 
 void Server::Run(void)
@@ -110,9 +96,12 @@ void Server::Run(void)
 		for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
 		{
 			int client_socket = it->second.getSocket();
-			FD_SET(client_socket, &this->_readfds);
-			if (client_socket > max_fd)
-				max_fd = client_socket;
+			if (client_socket > 0)
+			{
+				FD_SET(client_socket, &this->_readfds);
+				if (client_socket > max_fd)
+					max_fd = client_socket;
+			}
 		}
 		// Use select to monitor file descriptors for activity
 		if (select(max_fd + 1, &this->_readfds, NULL, NULL, NULL) < 0)
@@ -129,7 +118,6 @@ void Server::CheckActivity(void)
 {
 	std::map<int, Client> disconnected_clients;
 	int client_socket_sender;
-
 	for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
 	{
 		int client_socket = it->second.getSocket();
@@ -138,22 +126,65 @@ void Server::CheckActivity(void)
 			client_socket_sender = client_socket;
 			// Check if it was for closing, and also read the incoming message
 			int valread;
-			valread = recv(client_socket, this->_buffer, 1024, 0);
+			valread = recv(client_socket, this->_buffer, 1024, MSG_DONTWAIT);
 			if (valread == 0)
+			{
 				disconnected_clients.insert(std::pair<int, Client>(client_socket, it->second));
+			}
+			else if (valread < 0)
+			{
+				if (errno != EAGAIN && errno != EWOULDBLOCK)
+					continue;
+				else
+					disconnected_clients.insert(std::pair<int, Client>(client_socket, it->second));
+			}
 			else
 			{
 				// set the string terminating NULL byte on the end of the data read
-				this->_buffer[valread] = '\0';
-				std::cout << this->_clients[client_socket].getUsername() << ": " << this->_buffer;
-				// Send message to all clients
-				for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
+				this->_buffer[valread-1] = '\0';
+				// If the client hasn't entered their password yet, check the received data against the password
+				if (it->second.getPassword() == "")
 				{
-					int client_socket = it->second.getSocket();
-					if (client_socket != client_socket_sender)
+					if (this->_buffer == this->_password)
 					{
-						std::string message = this->_clients[client_socket_sender].getUsername() + ": " + this->_buffer;
-						send(client_socket, message.c_str(), message.length(), 0);
+						// Password is correct, prompt for username
+						it->second.setPassword(this->_buffer);
+						std::string message = "Enter NICK :\n";
+						int bytes_sent = send(client_socket, message.c_str(), message.length(), 0);
+						if (bytes_sent < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
+							throw std::runtime_error("send");
+					}
+					else
+					{
+						// Password is incorrect, disconnect the client
+						std::string message = "\nWrong password\n";
+						int bytes_sent = send(client_socket, message.c_str(), message.length(), 0);
+						if (bytes_sent < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
+							throw std::runtime_error("send");
+						disconnected_clients.insert(std::pair<int, Client>(client_socket, it->second));
+					}
+				}
+				// If the client has entered their password but not their username, set the received data as the username
+				else if (it->second.getUsername() == "")
+				{
+					it->second.setUsername(this->_buffer);
+					std::cout << "New client " << this->_buffer << " connected" << std::endl;
+				}
+				// If the client has entered both their password and username, handle the received data as a chat message
+				else
+				{
+					std::cout << it->second.getUsername() << ": " << this->_buffer << std::endl;
+					// Send the chat message to all other clients
+					for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++)
+					{
+						int other_client_socket = client_it->second.getSocket();
+						if (other_client_socket != client_socket_sender)
+						{
+							std::string message = it->second.getUsername() + ": " + this->_buffer + "\n";
+							int bytes_sent = send(other_client_socket, message.c_str(), message.length(), 0);
+							if (bytes_sent < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
+								throw std::runtime_error("send");
+						}
 					}
 				}
 			}
@@ -162,7 +193,7 @@ void Server::CheckActivity(void)
 	// Close disconnected clients
 	for (std::map<int, Client>::iterator it = disconnected_clients.begin(); it != disconnected_clients.end(); it++)
 	{
-		std::cout << disconnected_clients[it->first].getUsername() << " disconnected" << std::endl;
+		std::cout << it->second.getUsername() << " disconnected" << std::endl;
 		close(it->first);
 		this->_clients.erase(it->second.getSocket());
 	}
@@ -174,7 +205,7 @@ void Server::Init(void)
 		throw std::runtime_error("socket failed");
 	int flags = fcntl(this->_server_fd, F_GETFL, 0);
 	if (flags == -1)
-	throw std::runtime_error("fcntl");
+		throw std::runtime_error("fcntl");
 	if (fcntl(this->_server_fd, F_SETFL, flags | O_NONBLOCK) == -1)
 		throw std::runtime_error("fcntl");
 	if (setsockopt(this->_server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &_opt, sizeof(_opt)))
