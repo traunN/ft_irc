@@ -23,8 +23,9 @@ SRC =	$(SRCDIR)main.cpp\
 		$(SRCDIR)Client.cpp\
 		$(SRCDIR)Channel.cpp\
 		$(SRCDIR)Server.cpp\
+		$(SRCDIR)Commands.cpp\
 		# $(SRCDIR)Password.cpp\
-		# Commands.cpp\
+	
 		
 OBJ = $(patsubst $(SRCDIR)%.cpp, $(OBJDIR)%.o, $(SRC))
 

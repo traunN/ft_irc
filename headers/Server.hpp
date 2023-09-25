@@ -20,6 +20,12 @@ class Server {
 		std::vector<Channel> _channels;
 		std::map<int, Client> _clients;
 		fd_set _readfds;
+
+		void handlePassword(int client_socket, std::map<int, Client>::iterator it, std::map<int, Client> &disconnected_clients);
+		void handleUsername(int client_socket, std::map<int, Client>::iterator it);
+		void handleMessage(int client_socket_sender, std::map<int, Client>::iterator it);
+		void returnError(int client_socket, std::string error);
+		void sendBackMsgToServ(int client_socket, std::string message);
 	public:
 		Server(char const *argv1, char const *argv2);
 		// Server(std::string name, std::string password);
