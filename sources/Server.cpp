@@ -161,6 +161,8 @@ void Server::handleUsername(int client_socket, std::map<int, Client>::iterator i
 		this->sendBackMsgToServ(client_socket, "Enter NICK :\n");
 		return ;
 	}
+	// Username is valid, set the username and send a welcome message
+	this->sendBackMsgToServ(client_socket, "Welcome to the chat " + std::string(this->_buffer) + "!\n");
 	it->second.setUsername(this->_buffer);
 	std::cout << "New client " << this->_buffer << " connected" << std::endl;
 }
