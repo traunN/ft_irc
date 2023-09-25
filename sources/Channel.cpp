@@ -1,7 +1,11 @@
 #include "Channel.hpp"
 #include "Client.hpp"
 
+<<<<<<< HEAD
 Channel::Channel(std::string name, Client &creator, std::string password) : _name(name), _password(password), _creator(creator.GetUsername()), client_count(0) {
+=======
+Channel::Channel(std::string name, Client &creator, std::string password) : _name(name), _password(password), _creator(creator.getUsername()), client_count(0) {
+>>>>>>> origin
 	this->addClient(creator);
 	this->addOp(creator);
 	this->invite_only = false;
@@ -30,6 +34,13 @@ void Channel::setModes(std::string modes) {
 	this->_mode = modes;
 }
 
+<<<<<<< HEAD
+=======
+void Channel::setClientLimit(size_t limit) {
+	this->client_limit = limit;
+}
+
+>>>>>>> origin
 std::string const	&Channel::getName(void) const {
 	return (this->_name);
 }
@@ -46,22 +57,63 @@ std::string const	&Channel::getModes(void) const {
 	return (this->_mode);
 }
 
+<<<<<<< HEAD
 void Channel::addClient(Client &client) {
 	this->_clients.insert(std::pair<std::string, Client *>(client.GetUsername(), &client));
+=======
+size_t	Channel::getClientLimit(void) const {
+	return (this->client_limit);
+}
+
+void Channel::addClient(Client &client) {
+	if (isClientInChannel(client))
+		return ;
+	else if (isFull())
+		return ;
+	else if (this->has_clientlimit && this->client_count >= this->client_limit)
+		return ;
+	else if (this->invite_only && !isInvited(client))
+		return ;
+	this->_clients.insert(std::pair<std::string, Client *>(client.getUsername(), &client));
+>>>>>>> origin
 	this->client_count++;
 }
 
 void Channel::removeClient(Client &client) {
+<<<<<<< HEAD
 	this->_clients.erase(client.GetUsername());
+=======
+	if (!isClientInChannel(client))
+		return ;
+	this->_clients.erase(client.getUsername());
+>>>>>>> origin
 	this->client_count--;
 }
 
 void Channel::addOp(Client &client) {
+<<<<<<< HEAD
 	this->op_clients.insert(client.GetUsername());
 }
 
 void Channel::removeOp(Client &client) {
 	this->op_clients.erase(client.GetUsername());
+=======
+	if (client.getUsername() == this->_creator)
+		return ;
+	else if (!isClientInChannel(client))
+		return ;
+	else if (isOp(client))
+		return ;
+	this->op_clients.insert(client.getUsername());
+}
+
+void Channel::removeOp(Client &client) {
+	if (!isClientInChannel(client))
+		return ;
+	else if (!isOp(client))
+		return ;
+	this->op_clients.erase(client.getUsername());
+>>>>>>> origin
 }
 
 bool Channel::isInviteOnly(void) const {
@@ -81,6 +133,7 @@ bool Channel::hasClientLimit(void) const {
 }
 
 bool Channel::isOp(Client &client) const {
+<<<<<<< HEAD
 	return (this->op_clients.find(client.GetUsername()) != this->op_clients.end());
 }
 
@@ -90,6 +143,23 @@ bool Channel::isInvited(Client &client) const {
 
 bool Channel::isClientInChannel(Client &client) const {
 	return (this->_clients.find(client.GetUsername()) != this->_clients.end());
+=======
+	if (this->op_clients.find(client.getUsername()) != this->op_clients.end())
+		return (true);
+	return (false);
+}
+
+bool Channel::isInvited(Client &client) const {
+	if (this->invited_clients.find(client.getUsername()) != this->invited_clients.end())
+		return (true);
+	return (false);
+}
+
+bool Channel::isClientInChannel(Client &client) const {
+	if (this->_clients.find(client.getUsername()) != this->_clients.end())
+		return (true);
+	return (false);
+>>>>>>> origin
 }
 
 bool Channel::isFull(void) const {

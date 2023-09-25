@@ -32,7 +32,7 @@ Client::~Client(void) {
 // 	this->_nickname = nickname;
 // }
 
-void	Client::SetUsername(std::string username) {
+void	Client::setUsername(std::string username) {
 	this->_username = username;
 }
 
@@ -40,7 +40,7 @@ void	Client::SetUsername(std::string username) {
 // 	this->_realname = realname;
 // }
 
-void	Client::SetPassword(std::string password) {
+void	Client::setPassword(std::string password) {
 	this->_password = password;
 }
 
@@ -52,7 +52,7 @@ void	Client::SetPassword(std::string password) {
 // 	return (this->_nickname);
 // }
 
-std::string	Client::GetUsername(void) {
+std::string	Client::getUsername(void) {
 	return (this->_username);
 }
 
@@ -60,11 +60,11 @@ std::string	Client::GetUsername(void) {
 // 	return (this->_realname);
 // }
 
-std::string Client::GetPassword(void) {
+std::string Client::getPassword(void) {
 	return (this->_password);
 }
 
-int	Client::GetSocket(void) {
+int	Client::getSocket(void) {
 	return (this->_socket);
 }
 
@@ -74,7 +74,7 @@ int	Client::GetSocket(void) {
 
 std::ostream&	operator<<(std::ostream& os, Client& client) {
 	// os << "Nickname: " << client.GetNickname() << std::endl;
-	os << "Username: " << client.GetUsername() << std::endl;
+	os << "Username: " << client.getUsername() << std::endl;
 	// os << "Realname: " << client.GetRealname() << std::endl;
 	// os << "Password: " << client.GetPassword() << std::endl;
 	// os << "Hostname: " << client.GetHostname() << std::endl;

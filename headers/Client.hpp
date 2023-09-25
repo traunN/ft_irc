@@ -19,15 +19,15 @@ class Client
 		Client	&operator=(Client const &rhs);
 		
 		// void	SetNickname(std::string nickname);
-		void	SetUsername(std::string username);
+		void	setUsername(std::string username);
 		// void	SetRealname(std::string realname);
-		void	SetPassword(std::string password);
+		void	setPassword(std::string password);
 		// void	SetHostname(std::string hostname);
 		// std::string	GetNickname(void);
-		std::string	GetUsername(void);
-		int			GetSocket(void);
+		std::string	getUsername(void);
+		int			getSocket(void);
 		// std::string	GetRealname(void);
-		std::string	GetPassword(void);
+		std::string	getPassword(void);
 		// std::string	GetHostname(void);
 };
 
