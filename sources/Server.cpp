@@ -135,9 +135,16 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 	}
 }
 
+void Server::parseMessage(char *buffer, std::map<int, Client>::iterator it) {
+	if (strncmp(buffer, "JOIN ", 5) == 0)
+		std::cout << "User " << it->second.getUsername() << " JOIN " << buffer + 5 << std::endl;
+	else if (strncmp(buffer, "NICK ", 5) == 0)
+		std::cout << "User " << it->second.getUsername() << " NICK " << buffer + 5 << std::endl;
+}
+
 void Server::handleMessage(int client_socket_sender, std::map<int, Client>::iterator it) {
 	std::cout << it->second.getUsername() << ": " << this->_buffer << std::endl;
-	//parse message
+	parseMessage(this->_buffer, it);
 	// Send the chat message to all other clients
 	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
 		int other_client_socket = client_it->second.getSocket();
@@ -197,8 +204,7 @@ void Server::CheckActivity(void)
 				else if (it->second.getUsername() == "")
 					this->handleUsername(client_socket, it);
 				// If the client has entered both their password and username, handle the received data as a chat message
-				else
-					this->handleMessage(client_socket_sender, it);
+				this->handleMessage(client_socket_sender, it);
 			}
 		}
 	}

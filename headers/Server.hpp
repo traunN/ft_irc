@@ -50,6 +50,8 @@ class Server {
 		void AddClient(Client client);
 		void RemoveChannel(Channel channel);
 		void RemoveClient(Client client);
+
+		void parseMessage(char *buffer, std::map<int, Client>::iterator it);
 };
 
 std::ostream&	operator<<(std::ostream& os, Server& server);
