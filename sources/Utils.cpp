@@ -13,18 +13,4 @@ namespace utils {
 		if (password.length() < 1 /*do we check for strong password or not?*/)
 			throw std::invalid_argument("Invalid password length");
 	}
-	std::string gen_random(const int len) {
-		srand(time(0));
-		static const char alphanum[] =
-			"0123456789"
-			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-			"abcdefghijklmnopqrstuvwxyz";
-		std::string tmp_s;
-		tmp_s.reserve(len);
-
-		for (int i = 0; i < len; ++i) {
-			tmp_s += alphanum[rand() % (sizeof(alphanum) - 1)];
-		}
-		return tmp_s;
-	}
 }	
