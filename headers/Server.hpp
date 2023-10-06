@@ -51,7 +51,11 @@ class Server {
 		void RemoveChannel(Channel channel);
 		void RemoveClient(Client client);
 
+		bool ChannelExists(std::string channel_name);
+
 		void parseMessage(char *buffer, std::map<int, Client>::iterator it);
+		void makeUserJoinChannel(std::string channel, std::map<int, Client>::iterator it);
+		void makeUserLeaveChannel(std::string channel, std::map<int, Client>::iterator it);
 };
 
 std::ostream&	operator<<(std::ostream& os, Server& server);
