@@ -144,25 +144,18 @@ void Server::makeUserJoinChannel(std::string channel, std::map<int, Client>::ite
 		std::cout << "Channel name must start with #" << std::endl;
 		return ;
 	}
-	if (this->ChannelExists(channel) == true) {
-		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
-			if (channel_it->getName() == channel) {
-				if (channel_it->isClientInChannel(it->second)) {
-					std::cout << "User " << it->second.getUsername() << " is already in channel " << channel << std::endl;
-				}
-				else
-					channel_it->addClient(it->second);
-				std::cout << "User " << it->second.getUsername() << " JOIN " << channel << std::endl;
-				return ;
-			}
-		}
+	if (ChannelExists(channel) == false) {
+		Channel new_channel(channel, it->second, "");
+		this->AddChannel(new_channel);
+		std::cout << "User " << it->second.getUsername() << " creates " << channel << std::endl;
 	}
 	else {
-		Channel new_channel(channel, it->second, "");
-		this->_channels.push_back(new_channel);
-		std::cout << "User " << it->second.getUsername() << " JOIN " << channel << std::endl;
-		new_channel.addClient(it->second);
-		return ;
+		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
+			if (channel_it->getName() == channel) {
+				if (channel_it->addClient(it->second) == 0)
+					std::cout << "User " << it->second.getUsername() << " joins " << channel << std::endl;
+			}
+		}
 	}
 }
 
@@ -178,7 +171,7 @@ void Server::makeUserLeaveChannel(std::string channel, std::map<int, Client>::it
 	if (this->ChannelExists(channel) == true) {
 		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
 			if (channel_it->getName() == channel) {
-				std::cout << "User " << it->second.getUsername() << " LEAVE " << channel << std::endl;
+				std::cout << "User " << it->second.getUsername() << " leaves " << channel << std::endl;
 				channel_it->removeClient(it->second);
 				return ;
 			}
@@ -199,9 +192,6 @@ void Server::parseMessage(char *buffer, std::map<int, Client>::iterator it) {
 		makeUserJoinChannel(std::string(buffer + 5), it);
 	else if (strncmp(buffer, "LEAVE ", 6) == 0)
 		makeUserLeaveChannel(std::string(buffer + 6), it);
-	else if (strncmp(buffer, "NICK ", 5) == 0)
-		std::cout << "User " << it->second.getUsername() << " NICK " << buffer + 5 << std::endl;
-
 }
 
 void Server::handleMessage(int client_socket_sender, std::map<int, Client>::iterator it) {

@@ -42,7 +42,7 @@ class Channel {
 
 		void 				addMode(std::string mode);
 		void 				removeMode(std::string mode);
-		void 				addClient(Client &client);
+		int 				addClient(Client &client);
 		void 				removeClient(Client &client);
 		void 				addOp(Client &client);
 		void 				removeOp(Client &client);

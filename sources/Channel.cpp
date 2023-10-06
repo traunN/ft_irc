@@ -54,17 +54,22 @@ size_t	Channel::getClientLimit(void) const {
 	return (this->client_limit);
 }
 
-void Channel::addClient(Client &client) {
-	if (isClientInChannel(client))
-		return ;
-	else if (isFull())
-		return ;
-	else if (this->has_clientlimit && this->client_count >= this->client_limit)
-		return ;
-	else if (this->invite_only && !isInvited(client))
-		return ;
+int Channel::addClient(Client &client) {
+	if (isClientInChannel(client)) {
+		std::cout << "Client already in channel" << std::endl;
+		return 1;
+	}
+	else if (isFull()) {
+		std::cout << "Channel is full" << std::endl;
+		return 1;
+	}
+	else if (this->invite_only && !isInvited(client)) {
+		std::cout << "Client not invited" << std::endl;
+		return 1;
+	}
 	this->_clients.insert(std::pair<std::string, Client *>(client.getUsername(), &client));
 	this->client_count++;
+	return 0;
 }
 
 void Channel::removeClient(Client &client) {
@@ -121,6 +126,7 @@ bool Channel::isInvited(Client &client) const {
 }
 
 bool Channel::isClientInChannel(Client &client) const {
+	std::cout << "salut" << std::endl;
 	if (this->_clients.find(client.getUsername()) != this->_clients.end())
 		return (true);
 	return (false);
