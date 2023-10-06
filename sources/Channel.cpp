@@ -126,7 +126,6 @@ bool Channel::isInvited(Client &client) const {
 }
 
 bool Channel::isClientInChannel(Client &client) const {
-	std::cout << "salut" << std::endl;
 	if (this->_clients.find(client.getUsername()) != this->_clients.end())
 		return (true);
 	return (false);

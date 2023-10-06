@@ -56,6 +56,7 @@ class Server {
 		void parseMessage(char *buffer, std::map<int, Client>::iterator it);
 		void makeUserJoinChannel(std::string channel, std::map<int, Client>::iterator it);
 		void makeUserLeaveChannel(std::string channel, std::map<int, Client>::iterator it);
+		void changeUsername(std::string nickname, std::map<int, Client>::iterator it);
 };
 
 std::ostream&	operator<<(std::ostream& os, Server& server);

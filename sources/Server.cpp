@@ -187,11 +187,28 @@ void Server::makeUserLeaveChannel(std::string channel, std::map<int, Client>::it
 	}
 }
 
+void Server::changeUsername(std::string username, std::map<int, Client>::iterator it) {
+	if (username.length() > 9 || username.length() < 1) {
+		std::cout << "Invalid username lenght" << std::endl;
+		return ;
+	}
+	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
+		if (client_it->second.getUsername() == username) {
+			std::cout << "Username already taken" << std::endl;
+			return ;
+		}
+	}
+	std::cout << "User " << it->second.getUsername() << " changed username to " << username << std::endl;
+	it->second.setUsername(username);
+}
+
 void Server::parseMessage(char *buffer, std::map<int, Client>::iterator it) {
 	if (strncmp(buffer, "JOIN ", 5) == 0)
 		makeUserJoinChannel(std::string(buffer + 5), it);
 	else if (strncmp(buffer, "LEAVE ", 6) == 0)
 		makeUserLeaveChannel(std::string(buffer + 6), it);
+	else if (strncmp(buffer, "NICK ", 5) == 0)
+		changeUsername(std::string(buffer + 5), it);
 }
 
 void Server::handleMessage(int client_socket_sender, std::map<int, Client>::iterator it) {
