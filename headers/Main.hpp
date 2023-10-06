@@ -25,7 +25,7 @@
 
 #include "Utils.hpp"
 // #include "Password.hpp"
-#include "Commands.hpp"
 #include "Channel.hpp"
 #include "Client.hpp"
 #include "Server.hpp"
+#include "Commands.hpp"
