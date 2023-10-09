@@ -80,9 +80,7 @@ void Channel::removeClient(Client &client) {
 }
 
 void Channel::addOp(Client &client) {
-	if (client.getUsername() == this->_creator)
-		return ;
-	else if (!isClientInChannel(client))
+	if (!isClientInChannel(client))
 		return ;
 	else if (isOp(client))
 		return ;
