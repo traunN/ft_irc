@@ -23,15 +23,6 @@ Server::Server(char const *argv1, char const *argv2)
 			return;
 		}
 		std::cout << "Server is running on port " << this->_port << std::endl;
-		try
-		{
-			this->Run();
-		}
-		catch (std::exception &e)
-		{
-			std::cerr << e.what() << std::endl;
-			return;
-		}
 	}
 	else
 		throw std::runtime_error("Server is already running");
@@ -74,7 +65,7 @@ void Server::ProcessNewClient(void)
 	if (fcntl(new_socket, F_SETFL, flags | O_NONBLOCK) == -1)
 		throw std::runtime_error("fcntl");
 	// Send welcome message
-	this->sendBackMsgToServ(new_socket, "Enter PASS :\n");
+	this->sendMsgToSocket(new_socket, "Enter PASS :\n");
 	// Add the new client to the map with an empty username and password
 	Client client(new_socket, "", "");
 	this->_clients.insert(std::pair<int, Client>(new_socket, client));
@@ -110,27 +101,26 @@ void Server::Run(void)
 	}
 }
 
-void Server::sendBackMsgToServ(int client_socket, std::string message) {
+void Server::sendMsgToSocket(int client_socket, std::string message) {
 	int bytes_sent = send(client_socket, message.c_str(), message.length(), 0);
 	if (bytes_sent < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
 		throw std::runtime_error("send");
 }
 
 void Server::returnError(int client_socket, std::string error) {
-	this->sendBackMsgToServ(client_socket, error + "\n");
+	this->sendMsgToSocket(client_socket, error + "\n");
 }
 
-void Server::handlePassword(int client_socket, std::map<int, Client>::iterator it, std::map<int, Client> &disconnected_clients) {
-	(void)disconnected_clients;
+void Server::handlePassword(int client_socket, std::map<int, Client>::iterator it) {
 	if (this->_buffer == this->_password) {
 		// Password is correct, prompt for username
-		this->sendBackMsgToServ(client_socket, "Enter NICK :\n");
+		this->sendMsgToSocket(client_socket, "Enter NICK :\n");
 		it->second.setPassword(this->_buffer);
 	}
 	else {
 		// Password is incorrect, disconnect the client
 		this->returnError(client_socket, "Incorrect password");
-		this->sendBackMsgToServ(client_socket, "Enter PASS :\n");
+		this->sendMsgToSocket(client_socket, "Enter PASS :\n");
 		//disconnected_clients.insert(std::pair<int, Client>(client_socket, it->second));
 	}
 }
@@ -232,7 +222,7 @@ void Server::handleMessage(int client_socket_sender, std::map<int, Client>::iter
 	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
 		int other_client_socket = client_it->second.getSocket();
 		if (other_client_socket != client_socket_sender)
-			this->sendBackMsgToServ(other_client_socket, it->second.getUsername() + ": " + this->_buffer + "\n");
+			this->sendMsgToSocket(other_client_socket, it->second.getUsername() + ": " + this->_buffer + "\n");
 	}
 }
 
@@ -242,17 +232,17 @@ void Server::handleUsername(int client_socket, std::map<int, Client>::iterator i
 	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
 		if (client_it->second.getUsername() == this->_buffer) {
 			this->returnError(client_socket, "Username already taken");
-			this->sendBackMsgToServ(client_socket, "Enter NICK :\n");
+			this->sendMsgToSocket(client_socket, "Enter NICK :\n");
 			return ;
 		}
 	}
 	if (strlen(this->_buffer) > 9 || strlen(this->_buffer) < 1) {
 		this->returnError(client_socket, "Invalid username lenght");
-		this->sendBackMsgToServ(client_socket, "Enter NICK :\n");
+		this->sendMsgToSocket(client_socket, "Enter NICK :\n");
 		return ;
 	}
 	// Username is valid, set the username and send a welcome message
-	this->sendBackMsgToServ(client_socket, "Welcome to the chat " + std::string(this->_buffer) + "!\n");
+	this->sendMsgToSocket(client_socket, "Welcome to the chat " + std::string(this->_buffer) + "!\n");
 	it->second.setUsername(this->_buffer);
 	std::cout << "New client " << this->_buffer << " connected" << std::endl;
 }
@@ -282,7 +272,7 @@ void Server::CheckActivity(void)
 				this->_buffer[valread-1] = '\0';
 				// If the client hasn't entered their password yet, check the received data against the password
 				if (it->second.getPassword() == "")
-					this->handlePassword(client_socket, it, disconnected_clients);
+					this->handlePassword(client_socket, it);
 				// If the client has entered their password but not their username, set the received data as the username
 				else if (it->second.getUsername() == "")
 					this->handleUsername(client_socket, it);

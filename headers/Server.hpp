@@ -20,12 +20,6 @@ class Server {
 		std::vector<Channel> _channels;
 		std::map<int, Client> _clients;
 		fd_set _readfds;
-
-		void handlePassword(int client_socket, std::map<int, Client>::iterator it, std::map<int, Client> &disconnected_clients);
-		void handleUsername(int client_socket, std::map<int, Client>::iterator it);
-		void handleMessage(int client_socket_sender, std::map<int, Client>::iterator it);
-		void returnError(int client_socket, std::string error);
-		void sendBackMsgToServ(int client_socket, std::string message);
 	public:
 		Server(char const *argv1, char const *argv2);
 		// Server(std::string name, std::string password);
@@ -38,6 +32,7 @@ class Server {
 
 		std::string getName(void);
 		std::string getPassword(void);
+		char *getBuffer(void);
 		std::vector<Channel> getChannels(void);
 		std::map<int, Client> getClients(void);
 		void setName(std::string name);
@@ -45,6 +40,7 @@ class Server {
 		void setChannels(std::vector<Channel> channels);
 
 		bool isServerRunning(int port);
+		bool comparePassword(std::string password);
 
 		void AddChannel(Channel channel);
 		void AddClient(Client client);
@@ -58,6 +54,12 @@ class Server {
 		void makeUserLeaveChannel(std::string channel, std::map<int, Client>::iterator it);
 		void changeUsername(std::string nickname, std::map<int, Client>::iterator it);
 		void kickUserFromChannel(std::string nickname, std::map<int, Client>::iterator it);
+
+		void handleUsername(int client_socket, std::map<int, Client>::iterator it);
+		void handleMessage(int client_socket_sender, std::map<int, Client>::iterator it);
+		void handlePassword(int client_socket, std::map<int, Client>::iterator it);
+		void returnError(int client_socket, std::string error);
+		void sendMsgToSocket(int client_socket, std::string message);
 };
 
 std::ostream&	operator<<(std::ostream& os, Server& server);
