@@ -2,13 +2,15 @@
 
 #include "Main.hpp"
 
+class Server;
+
 class Commands {
     private:
-		std::string _command;
+		char * _command;
 		std::string _args;
-		// Server _server;
+		Server &_server;
     public:
-		// Commands(std::string command, std::string args, Server &server);
+		Commands(char * command, Server &server);
         virtual ~Commands(void);
 
 		void	exec_command();

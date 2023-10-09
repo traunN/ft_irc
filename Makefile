@@ -6,7 +6,7 @@
 #    By: ntraun <ntraun@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/08/22 15:02:15 by ntraun            #+#    #+#              #
-#    Updated: 2023/10/05 17:29:28 by ntraun           ###   ########.fr        #
+#    Updated: 2023/10/09 15:37:32 by ntraun           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,8 +22,8 @@ SRC =	$(SRCDIR)main.cpp\
 		$(SRCDIR)Utils.cpp\
 		$(SRCDIR)Client.cpp\
 		$(SRCDIR)Channel.cpp\
-		$(SRCDIR)Commands.cpp\
 		$(SRCDIR)Server.cpp\
+		$(SRCDIR)Commands.cpp\
 		# $(SRCDIR)Password.cpp\
 	
 		
