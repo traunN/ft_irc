@@ -57,6 +57,7 @@ class Server {
 		void makeUserJoinChannel(std::string channel, std::map<int, Client>::iterator it);
 		void makeUserLeaveChannel(std::string channel, std::map<int, Client>::iterator it);
 		void changeUsername(std::string nickname, std::map<int, Client>::iterator it);
+		void kickUserFromChannel(std::string nickname, std::map<int, Client>::iterator it);
 };
 
 std::ostream&	operator<<(std::ostream& os, Server& server);

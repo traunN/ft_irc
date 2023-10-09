@@ -14,7 +14,7 @@ class Channel {
 
 		std::string _topic;
 		std::string _creator;
-		std::set<std::string> op_clients; //KICK, INVITE, TOPIC, MODE(i : invite only, t: topic, k: password, o: give/take op, l: client limit)
+		std::set<std::string> op_clients; //KICK, INVITE, MODE(i : invite only, t: topic, k: password, o: give/take op, l: client limit)
 		std::set<std::string> invited_clients;
 
 		bool invite_only;

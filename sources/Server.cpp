@@ -136,15 +136,8 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 }
 
 void Server::makeUserJoinChannel(std::string channel, std::map<int, Client>::iterator it) {
-	if (channel.length() > 50) {
-		std::cout << "Channel name too long" << std::endl;
-		return ;
-	}
-	else if (channel[0] != '#') {
-		std::cout << "Channel name must start with #" << std::endl;
-		return ;
-	}
-	if (ChannelExists(channel) == false) {
+	if (!this->ChannelExists(channel) && utils::checkChannelName(channel)) {
+		std::cout << "salut channel making" << std::endl;
 		Channel new_channel(channel, it->second, "");
 		this->AddChannel(new_channel);
 		std::cout << "User " << it->second.getUsername() << " creates " << channel << std::endl;
@@ -160,46 +153,60 @@ void Server::makeUserJoinChannel(std::string channel, std::map<int, Client>::ite
 }
 
 void Server::makeUserLeaveChannel(std::string channel, std::map<int, Client>::iterator it) {
-	if (channel.length() > 50) {
-		std::cout << "Channel name too long" << std::endl;
-		return ;
-	}
-	else if (channel[0] != '#') {
-		std::cout << "Channel name must start with #" << std::endl;
-		return ;
-	}
-	if (this->ChannelExists(channel) == true) {
+	if (this->ChannelExists(channel) && utils::checkChannelName(channel)) {
 		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
 			if (channel_it->getName() == channel) {
-				std::cout << "User " << it->second.getUsername() << " leaves " << channel << std::endl;
-				channel_it->removeClient(it->second);
-				return ;
+				if (channel_it->isClientInChannel(it->second)) {
+					std::cout << "User " << it->second.getUsername() << " leaves " << channel << std::endl;
+					channel_it->removeClient(it->second);
+				}
 			}
 			else {
 				std::cout << "User " << it->second.getUsername() << " is not in channel " << channel << std::endl;
-				return ;
 			}
 		}
 	}
 	else {
-		std::cout << "Channel " << channel << " does not exist" << std::endl;
-		return ;
+		throw std::invalid_argument("Channel does not exist");
 	}
 }
 
 void Server::changeUsername(std::string username, std::map<int, Client>::iterator it) {
-	if (username.length() > 9 || username.length() < 1) {
-		std::cout << "Invalid username lenght" << std::endl;
-		return ;
+	if (utils::checkUserName(username)) {
+		for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
+			if (client_it->second.getUsername() == username)
+				throw std::invalid_argument("Username already taken");
+		}
+		std::cout << "User " << it->second.getUsername() << " changed username to " << username << std::endl;
+		it->second.setUsername(username);
 	}
-	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
-		if (client_it->second.getUsername() == username) {
-			std::cout << "Username already taken" << std::endl;
-			return ;
+}
+
+void Server::kickUserFromChannel(std::string input, std::map<int, Client>::iterator it) {
+	std::string channel;
+	std::string nickname;
+
+	std::stringstream ss(input);
+	ss >> nickname;
+	ss >> channel;
+	std::cout << nickname << " " << channel << std::endl;
+	if (utils::checkChannelName(channel) && this->ChannelExists(channel)) {
+		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
+			if (channel_it->getName() == channel) { std::cout << "kick : channel : " << channel << std::endl;
+				if (channel_it->isOp(it->second)) {
+					for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
+						if (client_it->second.getUsername() == nickname) {
+							std::cout << "User " << it->second.getUsername() << " kicked " << nickname << " from " << channel << std::endl;
+							channel_it->removeClient(client_it->second);
+						}
+					}
+				}
+				else {
+					throw std::invalid_argument("You are not op in this channel");
+				}
+			}
 		}
 	}
-	std::cout << "User " << it->second.getUsername() << " changed username to " << username << std::endl;
-	it->second.setUsername(username);
 }
 
 void Server::parseMessage(char *buffer, std::map<int, Client>::iterator it) {
@@ -209,11 +216,18 @@ void Server::parseMessage(char *buffer, std::map<int, Client>::iterator it) {
 		makeUserLeaveChannel(std::string(buffer + 6), it);
 	else if (strncmp(buffer, "NICK ", 5) == 0)
 		changeUsername(std::string(buffer + 5), it);
+	else if (strncmp(buffer, "KICK ", 5) == 0)
+		kickUserFromChannel(std::string(buffer + 5), it);
 }
 
 void Server::handleMessage(int client_socket_sender, std::map<int, Client>::iterator it) {
 	std::cout << it->second.getUsername() << ": " << this->_buffer << std::endl;
-	parseMessage(this->_buffer, it);
+	try {
+		parseMessage(this->_buffer, it);
+	}
+	catch (std::exception &e) {
+		this->returnError(client_socket_sender, e.what());
+	}
 	// Send the chat message to all other clients
 	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
 		int other_client_socket = client_it->second.getSocket();
