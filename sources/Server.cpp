@@ -1,7 +1,6 @@
 #include "Server.hpp"
 
-Server::Server(char const *argv1, char const *argv2)
-{
+Server::Server(char const *argv1, char const *argv2) {
 	if (!this->isServerRunning(atoi(argv1)))
 	{
 		(void)argv1;
@@ -28,15 +27,13 @@ Server::Server(char const *argv1, char const *argv2)
 		throw std::runtime_error("Server is already running");
 }
 
-Server::~Server(void)
-{
+Server::~Server(void) {
 	for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
 		close(it->second.getSocket());
 	close(this->_server_fd);
 }
 
-bool Server::isServerRunning(int port)
-{
+bool Server::isServerRunning(int port) {
 	int sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock == -1)
 		return false;
@@ -53,8 +50,7 @@ bool Server::isServerRunning(int port)
 	return false;
 }
 
-void Server::ProcessNewClient(void)
-{
+void Server::ProcessNewClient(void) {
 	// Use select for non blocking
 	int new_socket;
 	if ((new_socket = accept(this->_server_fd, (struct sockaddr *)&this->_address, (socklen_t *)&this->_addrlen)) < 0)
@@ -71,8 +67,7 @@ void Server::ProcessNewClient(void)
 	this->_clients.insert(std::pair<int, Client>(new_socket, client));
 }
 
-void Server::Run(void)
-{
+void Server::Run(void) {
 	int max_fd = this->_server_fd;
 
 	while (true)
@@ -199,36 +194,6 @@ void Server::kickUserFromChannel(std::string input, Client &client) {
 	}
 }
 
-// void Server::parseMessage(char *buffer, std::map<int, Client>::iterator it) {
-// 	if (strncmp(buffer, "JOIN ", 5) == 0)
-// 		makeUserJoinChannel(std::string(buffer + 5), it);
-// 	else if (strncmp(buffer, "LEAVE ", 6) == 0)
-// 		makeUserLeaveChannel(std::string(buffer + 6), it);
-// 	else if (strncmp(buffer, "NICK ", 5) == 0)
-// 		changeUsername(std::string(buffer + 5), it);
-// 	else if (strncmp(buffer, "KICK ", 5) == 0)
-// 		kickUserFromChannel(std::string(buffer + 5), it);
-// }
-
-// void Server::handleMessage(int client_socket_sender, std::map<int, Client>::iterator it) {
-// 	std::cout << it->second.getUsername() << ": " << this->_buffer << std::endl;
-// 	try {
-// 		parseMessage(this->_buffer, it);
-// 	}
-// 	catch (std::exception &e) {
-// 		this->returnError(client_socket_sender, e.what());
-// 	}
-// 	// Send the chat message to all other clients
-// 	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
-// 		int other_client_socket = client_it->second.getSocket();
-// 		if (other_client_socket != client_socket_sender)
-// 		{
-// 			//ASLO CHECK IF OTHER CLIENT SOCKET IS IN THE SAME CHANNEL AS THE SENDER
-// 			this->sendMsgToSocket(other_client_socket, it->second.getUsername() + ": " + this->_buffer + "\n");
-// 		}
-// 	}
-// }
-
 void Server::handleUsername(int client_socket, std::map<int, Client>::iterator it) {
 	// Check if the username is already taken
 	
@@ -250,8 +215,7 @@ void Server::handleUsername(int client_socket, std::map<int, Client>::iterator i
 	std::cout << "New client " << this->_buffer << " connected" << std::endl;
 }
 
-void Server::CheckActivity(void)
-{
+void Server::CheckActivity(void) {
 	std::map<int, Client> disconnected_clients;
 	int client_socket_sender;
 	for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++) {
@@ -294,8 +258,7 @@ void Server::CheckActivity(void)
 	}
 }
 
-void Server::Init(void)
-{
+void Server::Init(void) {
 	if ((this->_server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 		throw std::runtime_error("socket failed");
 	int flags = fcntl(this->_server_fd, F_GETFL, 0);
@@ -314,43 +277,35 @@ void Server::Init(void)
 		throw std::runtime_error("listen");
 }
 
-std::string Server::getPassword(void)
-{
+std::string Server::getPassword(void) {
 	return (this->_password);
 }
 
-std::vector<Channel> Server::getChannels(void)
-{
+std::vector<Channel> Server::getChannels(void) {
 	return (this->_channels);
 }
 
-std::map<int, Client> Server::getClients(void)
-{
+std::map<int, Client> Server::getClients(void) {
 	return (this->_clients);
 }
 
-void Server::setPassword(std::string password)
-{
+void Server::setPassword(std::string password) {
 	this->_password = password;
 }
 
-void Server::setChannels(std::vector<Channel> channels)
-{
+void Server::setChannels(std::vector<Channel> channels) {
 	this->_channels = channels;
 }
 
-void Server::AddChannel(Channel channel)
-{
+void Server::AddChannel(Channel channel) {
 	this->_channels.push_back(channel);
 }
 
-void Server::AddClient(Client client)
-{
+void Server::AddClient(Client client) {
 	this->_clients.insert(std::pair<int, Client>(client.getSocket(), client));
 }
 
-void Server::RemoveChannel(Channel channel)
-{
+void Server::RemoveChannel(Channel channel) {
 	std::vector<Channel>::iterator it = this->_channels.begin();
 	while (it != this->_channels.end())
 	{
@@ -363,8 +318,7 @@ void Server::RemoveChannel(Channel channel)
 	}
 }
 
-void Server::RemoveClient(Client client)
-{
+void Server::RemoveClient(Client client) {
 	std::map<int, Client>::iterator it = this->_clients.begin();
 	while (it != this->_clients.end())
 	{
@@ -387,8 +341,7 @@ bool Server::ChannelExists(std::string channel_name) {
 	return (false);
 }
 
-std::ostream &operator<<(std::ostream &os, Server &server)
-{
+std::ostream &operator<<(std::ostream &os, Server &server) {
 	os << "Password: " << server.getPassword() << std::endl;
 	os << "Channels count: " << server.getChannels().size() << std::endl;
 	os << "Clients count: " << server.getClients().size() << std::endl;
