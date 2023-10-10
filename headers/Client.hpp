@@ -24,6 +24,9 @@ class Client
 		std::string	getUsername(void);
 		int			getSocket(void);
 		std::string	getPassword(void);
+
+		void	handleMessage(char* message, Server &server);
+		void	parseMessage(char *buffer, Server &server);
 };
 
 std::ostream&	operator<<(std::ostream& os, Client& client);

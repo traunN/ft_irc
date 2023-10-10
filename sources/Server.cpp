@@ -125,34 +125,34 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 	}
 }
 
-void Server::makeUserJoinChannel(std::string channel, std::map<int, Client>::iterator it) {
+void Server::makeUserJoinChannel(std::string channel, Client &client) {
 	if (!this->ChannelExists(channel) && utils::checkChannelName(channel)) {
 		std::cout << "salut channel making" << std::endl;
-		Channel new_channel(channel, it->second, "");
+		Channel new_channel(channel, client, "");
 		this->AddChannel(new_channel);
-		std::cout << "User " << it->second.getUsername() << " creates " << channel << std::endl;
+		std::cout << "User " << client.getUsername() << " creates " << channel << std::endl;
 	}
 	else {
 		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
 			if (channel_it->getName() == channel) {
-				if (channel_it->addClient(it->second) == 0)
-					std::cout << "User " << it->second.getUsername() << " joins " << channel << std::endl;
+				if (channel_it->addClient(client) == 0)
+					std::cout << "User " << client.getUsername() << " joins " << channel << std::endl;
 			}
 		}
 	}
 }
 
-void Server::makeUserLeaveChannel(std::string channel, std::map<int, Client>::iterator it) {
+void Server::makeUserLeaveChannel(std::string channel, Client &client) {
 	if (this->ChannelExists(channel) && utils::checkChannelName(channel)) {
 		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
 			if (channel_it->getName() == channel) {
-				if (channel_it->isClientInChannel(it->second)) {
-					std::cout << "User " << it->second.getUsername() << " leaves " << channel << std::endl;
-					channel_it->removeClient(it->second);
+				if (channel_it->isClientInChannel(client)) {
+					std::cout << "User " << client.getUsername() << " leaves " << channel << std::endl;
+					channel_it->removeClient(client);
 				}
 			}
 			else {
-				std::cout << "User " << it->second.getUsername() << " is not in channel " << channel << std::endl;
+				std::cout << "User " << client.getUsername() << " is not in channel " << channel << std::endl;
 			}
 		}
 	}
@@ -161,18 +161,18 @@ void Server::makeUserLeaveChannel(std::string channel, std::map<int, Client>::it
 	}
 }
 
-void Server::changeUsername(std::string username, std::map<int, Client>::iterator it) {
+void Server::changeUsername(std::string username, Client &client) {
 	if (utils::checkUserName(username)) {
 		for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
 			if (client_it->second.getUsername() == username)
 				throw std::invalid_argument("Username already taken");
 		}
-		std::cout << "User " << it->second.getUsername() << " changed username to " << username << std::endl;
-		it->second.setUsername(username);
+		std::cout << "User " << client.getUsername() << " changed username to " << username << std::endl;
+		client.setUsername(username);
 	}
 }
 
-void Server::kickUserFromChannel(std::string input, std::map<int, Client>::iterator it) {
+void Server::kickUserFromChannel(std::string input, Client &client) {
 	std::string channel;
 	std::string nickname;
 
@@ -183,10 +183,10 @@ void Server::kickUserFromChannel(std::string input, std::map<int, Client>::itera
 	if (utils::checkChannelName(channel) && this->ChannelExists(channel)) {
 		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
 			if (channel_it->getName() == channel) { std::cout << "kick : channel : " << channel << std::endl;
-				if (channel_it->isOp(it->second)) {
+				if (channel_it->isOp(client)) {
 					for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
 						if (client_it->second.getUsername() == nickname) {
-							std::cout << "User " << it->second.getUsername() << " kicked " << nickname << " from " << channel << std::endl;
+							std::cout << "User " << client.getUsername() << " kicked " << nickname << " from " << channel << std::endl;
 							channel_it->removeClient(client_it->second);
 						}
 					}
@@ -199,32 +199,35 @@ void Server::kickUserFromChannel(std::string input, std::map<int, Client>::itera
 	}
 }
 
-void Server::parseMessage(char *buffer, std::map<int, Client>::iterator it) {
-	if (strncmp(buffer, "JOIN ", 5) == 0)
-		makeUserJoinChannel(std::string(buffer + 5), it);
-	else if (strncmp(buffer, "LEAVE ", 6) == 0)
-		makeUserLeaveChannel(std::string(buffer + 6), it);
-	else if (strncmp(buffer, "NICK ", 5) == 0)
-		changeUsername(std::string(buffer + 5), it);
-	else if (strncmp(buffer, "KICK ", 5) == 0)
-		kickUserFromChannel(std::string(buffer + 5), it);
-}
+// void Server::parseMessage(char *buffer, std::map<int, Client>::iterator it) {
+// 	if (strncmp(buffer, "JOIN ", 5) == 0)
+// 		makeUserJoinChannel(std::string(buffer + 5), it);
+// 	else if (strncmp(buffer, "LEAVE ", 6) == 0)
+// 		makeUserLeaveChannel(std::string(buffer + 6), it);
+// 	else if (strncmp(buffer, "NICK ", 5) == 0)
+// 		changeUsername(std::string(buffer + 5), it);
+// 	else if (strncmp(buffer, "KICK ", 5) == 0)
+// 		kickUserFromChannel(std::string(buffer + 5), it);
+// }
 
-void Server::handleMessage(int client_socket_sender, std::map<int, Client>::iterator it) {
-	std::cout << it->second.getUsername() << ": " << this->_buffer << std::endl;
-	try {
-		parseMessage(this->_buffer, it);
-	}
-	catch (std::exception &e) {
-		this->returnError(client_socket_sender, e.what());
-	}
-	// Send the chat message to all other clients
-	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
-		int other_client_socket = client_it->second.getSocket();
-		if (other_client_socket != client_socket_sender)
-			this->sendMsgToSocket(other_client_socket, it->second.getUsername() + ": " + this->_buffer + "\n");
-	}
-}
+// void Server::handleMessage(int client_socket_sender, std::map<int, Client>::iterator it) {
+// 	std::cout << it->second.getUsername() << ": " << this->_buffer << std::endl;
+// 	try {
+// 		parseMessage(this->_buffer, it);
+// 	}
+// 	catch (std::exception &e) {
+// 		this->returnError(client_socket_sender, e.what());
+// 	}
+// 	// Send the chat message to all other clients
+// 	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
+// 		int other_client_socket = client_it->second.getSocket();
+// 		if (other_client_socket != client_socket_sender)
+// 		{
+// 			//ASLO CHECK IF OTHER CLIENT SOCKET IS IN THE SAME CHANNEL AS THE SENDER
+// 			this->sendMsgToSocket(other_client_socket, it->second.getUsername() + ": " + this->_buffer + "\n");
+// 		}
+// 	}
+// }
 
 void Server::handleUsername(int client_socket, std::map<int, Client>::iterator it) {
 	// Check if the username is already taken
@@ -277,7 +280,8 @@ void Server::CheckActivity(void)
 				else if (it->second.getUsername() == "")
 					this->handleUsername(client_socket, it);
 				// If the client has entered both their password and username, handle the received data as a chat message
-				this->handleMessage(client_socket_sender, it);
+				else
+					it->second.handleMessage(this->_buffer, *this);
 			}
 		}
 	}
