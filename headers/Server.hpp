@@ -40,7 +40,6 @@ class Server {
 		void setChannels(std::vector<Channel> channels);
 
 		bool isServerRunning(int port);
-		bool comparePassword(std::string password);
 
 		void AddChannel(Channel channel);
 		void AddClient(Client client);
@@ -49,17 +48,16 @@ class Server {
 
 		bool ChannelExists(std::string channel_name);
 
-		// void parseMessage(char *buffer, std::map<int, Client>::iterator it);
 		void makeUserJoinChannel(std::string channel,Client &client);
 		void makeUserLeaveChannel(std::string channel, Client &client);
 		void changeUsername(std::string nickname, Client &client);
 		void kickUserFromChannel(std::string nickname, Client &client);
 
 		void handleUsername(int client_socket, std::map<int, Client>::iterator it);
-		// void handleMessage(int client_socket_sender, std::map<int, Client>::iterator it);
 		void handlePassword(int client_socket, std::map<int, Client>::iterator it);
 		void returnError(int client_socket, std::string error);
 		void sendMsgToSocket(int client_socket, std::string message);
+		void sendMsgToUsers(std::string message, Client &client);
 };
 
 std::ostream&	operator<<(std::ostream& os, Server& server);

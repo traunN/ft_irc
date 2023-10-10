@@ -1,14 +1,13 @@
 #include "Channel.hpp"
 #include "Client.hpp"
 
-Channel::Channel(std::string name, Client &creator, std::string password) : _name(name), _password(password), _creator(creator.getUsername()), client_count(0) {
+Channel::Channel(std::string name, Client &creator, std::string password): _name(name), _password(password), _creator(creator.getUsername()), invite_only(false), client_count(0){
 	this->addClient(creator);
 	this->addOp(creator);
-	this->invite_only = false;
 	this->restrict_topic = false;
 	this->has_password = false;
 	this->has_clientlimit = false;
-	this->client_limit = 0;
+	this->client_limit = 100;
 }
 
 Channel::~Channel(void) {
@@ -48,6 +47,10 @@ std::string const	&Channel::getCreator(void) const {
 
 std::string const	&Channel::getModes(void) const {
 	return (this->_mode);
+}
+
+std::map<std::string, Client *> &Channel::getClients(void) {
+	return (this->_clients);
 }
 
 size_t	Channel::getClientLimit(void) const {

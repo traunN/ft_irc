@@ -38,6 +38,7 @@ class Channel {
 		std::string const	&getTopic(void) const;
 		std::string const	&getCreator(void) const;
 		std::string const	&getModes(void) const;
+		std::map<std::string, Client *> &getClients(void);
 		size_t				getClientLimit(void) const;
 
 		void 				addMode(std::string mode);

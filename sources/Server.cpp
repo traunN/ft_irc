@@ -102,6 +102,33 @@ void Server::sendMsgToSocket(int client_socket, std::string message) {
 		throw std::runtime_error("send");
 }
 
+void Server::sendMsgToUsers(std::string message, Client &client) {
+	std::vector<std::string> words = utils::split(message, " ");
+	std::string first_word = words[1];
+	// check if its a specific user
+	if (first_word[0] == '@') {
+		std::string username = first_word.substr(1);
+		for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
+			if (client_it->second.getUsername() == username) {
+				this->sendMsgToSocket(client_it->second.getSocket(), client.getUsername() + ": " + message + "\n");
+				return ;
+			}
+		}
+	}
+	// check if its a channel name send to all users in this channel expect client
+	else if (first_word[0] == '#') {
+		std::string channel_name = first_word;
+		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
+			if (channel_it->getName() == channel_name) {
+				for (std::map<std::string, Client *>::iterator client_it = channel_it->getClients().begin(); client_it != channel_it->getClients().end(); client_it++) {
+					this->sendMsgToSocket(client_it->second->getSocket(), client.getUsername() + ": " + message + "\n");
+				}
+				return ;
+			}
+		}
+	}
+}
+
 void Server::returnError(int client_socket, std::string error) {
 	this->sendMsgToSocket(client_socket, error + "\n");
 }
@@ -122,7 +149,6 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 
 void Server::makeUserJoinChannel(std::string channel, Client &client) {
 	if (!this->ChannelExists(channel) && utils::checkChannelName(channel)) {
-		std::cout << "salut channel making" << std::endl;
 		Channel new_channel(channel, client, "");
 		this->AddChannel(new_channel);
 		std::cout << "User " << client.getUsername() << " creates " << channel << std::endl;

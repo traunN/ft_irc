@@ -23,7 +23,6 @@ Client	&Client::operator=(Client const &rhs)
 }
 
 void Client::parseMessage(char *buffer, Server &server) {
-	std::cout << "Parsing message" << std::endl;
 	if (strncmp(buffer, "JOIN ", 5) == 0)
 		server.makeUserJoinChannel(std::string(buffer + 5), *this);
 	else if (strncmp(buffer, "LEAVE ", 6) == 0)
@@ -32,11 +31,15 @@ void Client::parseMessage(char *buffer, Server &server) {
 		server.changeUsername(std::string(buffer + 5), *this);
 	else if (strncmp(buffer, "KICK ", 5) == 0)
 		server.kickUserFromChannel(std::string(buffer + 5), *this);
+	else if (strncmp(buffer, "PRIVMSG", 7) == 0)
+		server.sendMsgToUsers(std::string(buffer + 7), *this);
+	else 
+		throw std::runtime_error("Invalid command");
 }
 
 void Client::handleMessage(char* message, Server &server) {
 	std::map<int, Client> clients = server.getClients();
-	std::cout << this->getUsername() << ": " << message << std::endl;
+	// std::cout << this->getUsername() << ": " << message << std::endl;
 	try {
 		// parseMessage needs to be a method in the Client or Server class or a global function
 		this->parseMessage(message, server);
@@ -46,16 +49,16 @@ void Client::handleMessage(char* message, Server &server) {
 		server.returnError(this->getSocket(), e.what());
 	}
 	
-	// Send the chat message to all other clients
-	for (std::map<int, Client>::iterator client_it = clients.begin(); client_it != clients.end(); client_it++) {
-		int other_client_socket = client_it->second.getSocket();
-		if (other_client_socket != this->getSocket())
-		{
-			// Check if other client socket is in the same channel as the sender
-			// sendMsgToSocket needs to be a method in the Server class
-			server.sendMsgToSocket(other_client_socket, this->getUsername() + ": " + message + "\n");
-		}
-	}
+	// // Send the chat message to all other clients
+	// for (std::map<int, Client>::iterator client_it = clients.begin(); client_it != clients.end(); client_it++) {
+	// 	int other_client_socket = client_it->second.getSocket();
+	// 	if (other_client_socket != this->getSocket())
+	// 	{
+	// 		// Check if other client socket is in the same channel as the sender
+	// 		// sendMsgToSocket needs to be a method in the Server class
+	// 		server.sendMsgToSocket(other_client_socket, this->getUsername() + ": " + message + "\n");
+	// 	}
+	// }
 }
 
 
