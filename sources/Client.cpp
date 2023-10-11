@@ -31,8 +31,13 @@ void Client::parseMessage(char *buffer, Server &server) {
 		server.changeUsername(std::string(buffer + 5), *this);
 	else if (strncmp(buffer, "KICK ", 5) == 0)
 		server.kickUserFromChannel(std::string(buffer + 5), *this);
-	else if (strncmp(buffer, "PRIVMSG", 7) == 0)
+	else if (strncmp(buffer, "PRIVMSG ", 8) == 0)
 		server.sendMsgToUsers(std::string(buffer + 7), *this);
+	else if (strncmp(buffer, "MODE ", 5) == 0)
+		server.changeChannelMode(std::string(buffer + 5), *this);
+	else if (strncmp(buffer, "INVITE ", 7) == 0)
+		server.inviteUserToChannel(std::string(buffer + 7), *this);
+	//else if (strncmp(buffer, "TOPIC ", 6) == 0)
 	else 
 		throw std::runtime_error("Invalid command");
 }

@@ -47,6 +47,7 @@ class Channel {
 		void 				removeClient(Client &client);
 		void 				addOp(Client &client);
 		void 				removeOp(Client &client);
+		void				addInvited(std::string username);
 
 		bool 				isInviteOnly(void) const;
 		bool 				isRestrictedTopic(void) const;

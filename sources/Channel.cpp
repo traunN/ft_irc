@@ -136,6 +136,10 @@ bool Channel::isFull(void) const {
 	return (this->client_count >= this->client_limit);
 }
 
+void Channel::addInvited(std::string username) {
+	this->invited_clients.insert(username);
+}
+
 void Channel::addMode(std::string mode) {
 	if (mode == "i")
 		this->invite_only = true;

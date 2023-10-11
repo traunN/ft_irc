@@ -52,6 +52,8 @@ class Server {
 		void makeUserLeaveChannel(std::string channel, Client &client);
 		void changeUsername(std::string nickname, Client &client);
 		void kickUserFromChannel(std::string nickname, Client &client);
+		void changeChannelMode(std::string input, Client &client);
+		void inviteUserToChannel(std::string input, Client &client);
 
 		void handleUsername(int client_socket, std::map<int, Client>::iterator it);
 		void handlePassword(int client_socket, std::map<int, Client>::iterator it);

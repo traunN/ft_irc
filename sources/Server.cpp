@@ -193,6 +193,58 @@ void Server::changeUsername(std::string username, Client &client) {
 	}
 }
 
+void Server::inviteUserToChannel(std::string input, Client &client) {
+	std::string channel;
+	std::string nickname;
+
+	std::stringstream ss(input);
+	ss >> channel;
+	ss >> nickname;
+	if (nickname.length() > 50)
+		throw std::invalid_argument("Invalid nickname");
+	if (utils::checkChannelName(channel) && this->ChannelExists(channel)) {
+		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
+			if (channel_it->getName() == channel) {
+				if (channel_it->isOp(client)) {
+					channel_it->addInvited(nickname);
+				}
+			}
+			else {
+				throw std::invalid_argument("You are not op in this channel, you can not invite users");
+			}
+		}
+	}
+}
+
+
+void Server::changeChannelMode(std::string input, Client &client) {
+	std::string channel;
+	std::string mode;
+
+	std::stringstream ss(input);
+	ss >> channel;
+	ss >> mode;
+	if (mode.length() < 2 || mode.length() > 3)
+		throw std::invalid_argument("Invalid mode, use MODE <#channel> <+/-mode> (i : invite only, t: topic, k: password, o: give/take op, l: client limit)");
+	if (this->ChannelExists(channel) && utils::checkChannelName(channel)) {
+		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
+			if (channel_it->getName() == channel) {
+				if (channel_it->isOp(client)) {
+					if (mode[0] == '+')
+						channel_it->addMode(mode.substr(1));
+					else if (mode[0] == '-')
+						channel_it->removeMode(mode.substr(1));
+					else
+						throw std::invalid_argument("Invalid mode");
+				}
+				else {
+					throw std::invalid_argument("You are not op in this channel, you can not change its mode");
+				}
+			}
+		}
+	}
+}
+
 void Server::kickUserFromChannel(std::string input, Client &client) {
 	std::string channel;
 	std::string nickname;
