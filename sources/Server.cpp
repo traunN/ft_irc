@@ -373,7 +373,6 @@ void Server::CheckActivity(void) {
 				if (this->_buffer[valread - 2] == '\r' && this->_buffer[valread - 1] == '\n')
 				{
 					it->second.setIsSic(true);
-					std::cout << "received message: " << this->_buffer << std::endl;
 					this->_buffer[valread - 2] = '\0';
 				}
 				else

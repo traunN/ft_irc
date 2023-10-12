@@ -10,7 +10,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-//#include <openssl/sha.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,7 +23,6 @@
 #include <errno.h>
 
 #include "Utils.hpp"
-// #include "Password.hpp"
 #include "Channel.hpp"
 #include "Client.hpp"
 #include "Server.hpp"
