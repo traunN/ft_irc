@@ -3,8 +3,6 @@
 Server::Server(char const *argv1, char const *argv2) {
 	if (!this->isServerRunning(atoi(argv1)))
 	{
-		(void)argv1;
-		(void)argv2;
 		this->_channels = std::vector<Channel>();
 		this->_clients = std::map<int, Client>();
 		this->_opt = 1;
@@ -119,7 +117,9 @@ void Server::sendMsgToUsers(std::string message, Client &client) {
 		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
 			if (channel_it->getName() == channel_name) {
 				for (std::map<std::string, Client *>::iterator client_it = channel_it->getClients().begin(); client_it != channel_it->getClients().end(); client_it++) {
-					this->sendMsgToSocket(client_it->second->getSocket(), "[" + channel_name + "] " + client.getUsername() + ": " + full_message + "\n");
+					// cout buffer from client
+					if (!client_it->second->getIsSic() || client_it->second->getSocket() != client.getSocket())
+						this->sendMsgToSocket(client_it->second->getSocket(), "[" + channel_name + "] : <" + client.getUsername() + "> " + full_message + "\n");
 				}
 				return ;
 			}
@@ -372,10 +372,12 @@ void Server::CheckActivity(void) {
 				// set the string terminating NULL byte on the end of the data read
 				if (this->_buffer[valread - 2] == '\r' && this->_buffer[valread - 1] == '\n')
 				{
+					it->second.setIsSic(true);
 					this->_buffer[valread - 2] = '\0';
 				}
 				else
 				{
+					it->second.setIsSic(false);
 					this->_buffer[valread - 1] = '\0';
 				}
 				// If the client hasn't entered their password yet, check the received data against the password
