@@ -119,7 +119,7 @@ void Server::sendMsgToUsers(std::string message, Client &client) {
 				for (std::map<std::string, Client *>::iterator client_it = channel_it->getClients().begin(); client_it != channel_it->getClients().end(); client_it++) {
 					// cout buffer from client
 					if (!client_it->second->getIsSic() || client_it->second->getSocket() != client.getSocket())
-						this->sendMsgToSocket(client_it->second->getSocket(), "[" + channel_name + "] : <" + client.getUsername() + "> " + full_message + "\n");
+						this->sendMsgToSocket(client_it->second->getSocket(), channel_name + "\t <" + client.getUsername() + "> : " + full_message + "\n");
 				}
 				return ;
 			}
@@ -373,6 +373,7 @@ void Server::CheckActivity(void) {
 				if (this->_buffer[valread - 2] == '\r' && this->_buffer[valread - 1] == '\n')
 				{
 					it->second.setIsSic(true);
+					std::cout << "received message: " << this->_buffer << std::endl;
 					this->_buffer[valread - 2] = '\0';
 				}
 				else
