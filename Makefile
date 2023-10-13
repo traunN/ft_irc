@@ -6,7 +6,7 @@
 #    By: ntraun <ntraun@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/08/22 15:02:15 by ntraun            #+#    #+#              #
-#    Updated: 2023/10/09 16:02:42 by ntraun           ###   ########.fr        #
+#    Updated: 2023/10/12 14:56:24 by ntraun           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,9 +23,7 @@ SRC =	$(SRCDIR)main.cpp\
 		$(SRCDIR)Client.cpp\
 		$(SRCDIR)Channel.cpp\
 		$(SRCDIR)Server.cpp\
-		# $(SRCDIR)Password.cpp\
-	
-		
+
 OBJ = $(patsubst $(SRCDIR)%.cpp, $(OBJDIR)%.o, $(SRC))
 
 INCLUDES = -I headers/

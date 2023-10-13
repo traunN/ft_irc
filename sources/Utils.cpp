@@ -28,18 +28,20 @@ namespace utils {
 		return true;
 	}
 
-	std::vector<std::string> split(std::string s, std::string delimiter) {
-		size_t pos_start = 0, pos_end, delim_len = delimiter.length();
-		std::string token;
-		std::vector<std::string> res;
-
-		while ((pos_end = s.find(delimiter, pos_start)) != std::string::npos) {
-			token = s.substr(pos_start, pos_end - pos_start);
-			pos_start = pos_end + delim_len;
-			res.push_back(token);
+	std::vector<std::string> split(const std::string& s, std::vector<std::string>& delimiters) {
+		std::vector<std::string> tokens;
+		tokens.push_back(s);
+		for (size_t i = 0; i < delimiters.size(); ++i) {
+			for (size_t j = 0; j < tokens.size(); ++j) {
+				size_t pos = tokens[j].find(delimiters[i]);
+				if (pos != std::string::npos) {
+					std::string pre = tokens[j].substr(0, pos);
+					std::string post = tokens[j].substr(pos + delimiters[i].size(), tokens[j].size() - (pos + delimiters[i].size()));
+					tokens[j] = pre;
+					tokens.insert(tokens.begin() + j + 1, post);
+				}
+			}
 		}
-
-		res.push_back(s.substr(pos_start));
-		return res;
+		return tokens;
 	}
 }

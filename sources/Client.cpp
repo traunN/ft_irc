@@ -53,17 +53,6 @@ void Client::handleMessage(char* message, Server &server) {
 		// returnError needs to be a method in the Server class
 		server.returnError(this->getSocket(), e.what());
 	}
-	
-	// // Send the chat message to all other clients
-	// for (std::map<int, Client>::iterator client_it = clients.begin(); client_it != clients.end(); client_it++) {
-	// 	int other_client_socket = client_it->second.getSocket();
-	// 	if (other_client_socket != this->getSocket())
-	// 	{
-	// 		// Check if other client socket is in the same channel as the sender
-	// 		// sendMsgToSocket needs to be a method in the Server class
-	// 		server.sendMsgToSocket(other_client_socket, this->getUsername() + ": " + message + "\n");
-	// 	}
-	// }
 }
 
 
@@ -90,6 +79,22 @@ std::string Client::getPassword(void) {
 
 int	Client::getSocket(void) {
 	return (this->_socket);
+}
+
+bool	Client::getOperator(void) {
+	return (this->_operator);
+}
+
+bool	Client::getIsSic(void) {
+	return (this->_is_sic);
+}
+
+void	Client::setOperator(bool op) {
+	this->_operator = op;
+}
+
+void	Client::setIsSic(bool is_sic) {
+	this->_is_sic = is_sic;
 }
 
 std::ostream&	operator<<(std::ostream& os, Client& client) {
