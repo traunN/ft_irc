@@ -274,10 +274,12 @@ void Server::inviteUserToChannel(std::string input, Client &client) {
 void Server::changeChannelMode(std::string input, Client &client) {
 	std::string channel;
 	std::string mode;
+	std::string arg;
 
 	std::stringstream ss(input);
 	ss >> channel;
 	ss >> mode;
+	ss >> arg;
 	if (mode.length() < 2 || mode.length() > 3)
 		throw std::invalid_argument("Invalid mode, use MODE <#channel> <+/-mode> (i : invite only, t: topic, k: password, o: give/take op, l: client limit)");
 	if (this->ChannelExists(channel) && utils::checkChannelName(channel)) {
@@ -285,7 +287,7 @@ void Server::changeChannelMode(std::string input, Client &client) {
 			if (channel_it->getName() == channel) {
 				if (channel_it->isOp(client)) {
 					if (mode[0] == '+')
-						channel_it->addMode(mode.substr(1));
+						channel_it->addMode(mode.substr(1), arg);
 					else if (mode[0] == '-')
 						channel_it->removeMode(mode.substr(1));
 					else
@@ -297,6 +299,12 @@ void Server::changeChannelMode(std::string input, Client &client) {
 			}
 		}
 	}
+}
+
+void Server::changeChannelTopic(std::string input, Client &client) {
+	std::string channel;
+	std::string topic;
+
 }
 
 void Server::kickUserFromChannel(std::string input, Client &client) {

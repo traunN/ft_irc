@@ -140,13 +140,17 @@ void Channel::addInvited(std::string username) {
 	this->invited_clients.insert(username);
 }
 
-void Channel::addMode(std::string mode) {
+void Channel::addMode(std::string mode, std::string arg) {
 	if (mode == "i")
 		this->invite_only = true;
-	else if (mode == "t")
+	else if (mode == "t") {
 		this->restrict_topic = true;
-	else if (mode == "k")
+		this->_topic = arg;
+	}
+	else if (mode == "k") {
 		this->has_password = true;
+		this->_password = arg;
+	}
 	else if (mode == "l")
 		this->has_clientlimit = true;
 }
