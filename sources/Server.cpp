@@ -216,7 +216,6 @@ void Server::inviteUserToChannel(std::string input, Client &client) {
 	}
 }
 
-
 void Server::changeChannelMode(std::string input, Client &client) {
 	std::string channel;
 	std::string mode;
