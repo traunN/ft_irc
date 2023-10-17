@@ -39,7 +39,8 @@ void Client::parseMessage(char *buffer, Server &server) {
 		server.inviteUserToChannel(std::string(buffer + 7), *this);
 	else if (strncmp(buffer, "DEBUG", 6) == 0)
 		server.debug();
-	//else if (strncmp(buffer, "TOPIC ", 6) == 0)
+	else if (strncmp(buffer, "TOPIC ", 6) == 0)
+		server.changeChannelTopic(std::string(buffer + 6), *this);
 	else 
 		throw std::runtime_error("Invalid command");
 }
