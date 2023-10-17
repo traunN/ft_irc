@@ -167,15 +167,10 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 			{
 				std::string nickname = words[3];
 				nickname.erase(std::remove_if(nickname.begin(), nickname.end(), ::isspace), nickname.end());
-				try {
-					this->sendMsgToSocket(client_socket, "Username accepted\n");
-					this->changeUsername(nickname, it->second);
-				}
-				catch (std::exception &e) {
-					this->returnError(client_socket, e.what());
-					this->sendMsgToSocket(client_socket, "Enter NICK :\n");
-					throw std::invalid_argument("Invalid username");
-				}
+				// while nickname is not set prompt for nickname
+				memset(this->_buffer, 0, 1024);
+				strcpy(this->_buffer, nickname.c_str());
+				this->handleUsername(client_socket, it);
 			}
 		}
 		else {
@@ -274,7 +269,6 @@ void Server::inviteUserToChannel(std::string input, Client &client) {
 	}
 }
 
-
 void Server::changeChannelMode(std::string input, Client &client) {
 	std::string channel;
 	std::string mode;
@@ -341,7 +335,6 @@ void Server::handleUsername(int client_socket, std::map<int, Client>::iterator i
 		}
 	}
 	if (strlen(this->_buffer) > 9 || strlen(this->_buffer) < 1) {
-		std::cout << "received username: " << this->_buffer << std::endl;
 		this->returnError(client_socket, "Invalid username lenght");
 		this->sendMsgToSocket(client_socket, "Enter NICK :\n");
 		return ;
@@ -395,7 +388,11 @@ void Server::CheckActivity(void) {
 				}
 				// If the client has entered their password but not their username, set the received data as the username
 				else if (it->second.getUsername() == "")
+				{
+					if (it->second.getIsSic() && this->_buffer[0] == 'n' && this->_buffer[1] == ' ')
+						strcpy(this->_buffer, this->_buffer + 2);
 					this->handleUsername(client_socket, it);
+				}
 				// If the client has entered both their password and username, handle the received data as a chat message
 				else
 				{
