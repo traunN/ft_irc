@@ -25,7 +25,7 @@ Client	&Client::operator=(Client const &rhs)
 void Client::parseMessage(char *buffer, Server &server) {
 	if (strncmp(buffer, "JOIN ", 5) == 0)
 		server.makeUserJoinChannel(std::string(buffer + 5), *this);
-	else if (strncmp(buffer, "LEAVE ", 6) == 0)
+	else if (strncmp(buffer, "PART ", 6) == 0)
 		server.makeUserLeaveChannel(std::string(buffer + 6), *this);
 	else if (strncmp(buffer, "NICK ", 5) == 0)
 		server.changeUsername(std::string(buffer + 5), *this);
@@ -44,7 +44,6 @@ void Client::parseMessage(char *buffer, Server &server) {
 
 void Client::handleMessage(char* message, Server &server) {
 	std::map<int, Client> clients = server.getClients();
-	// std::cout << this->getUsername() << ": " << message << std::endl;
 	try {
 		// parseMessage needs to be a method in the Client or Server class or a global function
 		this->parseMessage(message, server);

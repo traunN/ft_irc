@@ -100,6 +100,8 @@ void Server::sendMsgToSocket(int client_socket, std::string message) {
 		throw std::runtime_error("send");
 }
 
+// REMEMBER TO PROMPT FOR USERNAME WHEN USER connect
+
 void Server::sendMsgToUsers(std::string message, Client &client) {
 	std::vector <std::string> delimiters;
 	delimiters.push_back(" ");
@@ -148,6 +150,7 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 	delimiters.push_back("\n");
 	std::vector<std::string> words = utils::split(this->_buffer, delimiters);
 	std::string first_word = words[0];
+	// FROM SIC CLIENT
 	if (first_word == "PASS") {
 		std::string enteredPassword = words[1];
 		enteredPassword.erase(std::remove_if(enteredPassword.begin(), enteredPassword.end(), ::isspace), enteredPassword.end());
