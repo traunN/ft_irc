@@ -50,16 +50,18 @@ class Server {
 
 		void makeUserJoinChannel(std::string channel,Client &client);
 		void makeUserLeaveChannel(std::string channel, Client &client);
-		void changeUsername(std::string nickname, Client &client);
+		void changeNickname(std::string nickname, Client &client);
 		void kickUserFromChannel(std::string nickname, Client &client);
 		void changeChannelMode(std::string input, Client &client);
 		void inviteUserToChannel(std::string input, Client &client);
 
-		void handleUsername(int client_socket, std::map<int, Client>::iterator it);
+		void handleNickname(int client_socket, std::map<int, Client>::iterator it);
 		void handlePassword(int client_socket, std::map<int, Client>::iterator it);
 		void returnError(int client_socket, std::string error);
 		void sendMsgToSocket(int client_socket, std::string message);
 		void sendMsgToUsers(std::string message, Client &client);
+
+		void debug(void);
 };
 
 std::ostream&	operator<<(std::ostream& os, Server& server);

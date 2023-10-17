@@ -28,7 +28,7 @@ void Client::parseMessage(char *buffer, Server &server) {
 	else if (strncmp(buffer, "PART ", 6) == 0)
 		server.makeUserLeaveChannel(std::string(buffer + 6), *this);
 	else if (strncmp(buffer, "NICK ", 5) == 0)
-		server.changeUsername(std::string(buffer + 5), *this);
+		server.changeNickname(std::string(buffer + 5), *this);
 	else if (strncmp(buffer, "KICK ", 5) == 0)
 		server.kickUserFromChannel(std::string(buffer + 5), *this);
 	else if (strncmp(buffer, "PRIVMSG ", 8) == 0)
@@ -37,6 +37,8 @@ void Client::parseMessage(char *buffer, Server &server) {
 		server.changeChannelMode(std::string(buffer + 5), *this);
 	else if (strncmp(buffer, "INVITE ", 7) == 0)
 		server.inviteUserToChannel(std::string(buffer + 7), *this);
+	else if (strncmp(buffer, "DEBUG", 6) == 0)
+		server.debug();
 	//else if (strncmp(buffer, "TOPIC ", 6) == 0)
 	else 
 		throw std::runtime_error("Invalid command");
@@ -64,12 +66,20 @@ void	Client::setUsername(std::string username) {
 	this->_username = username;
 }
 
+void	Client::setNickname(std::string nickname) {
+	this->_nickname = nickname;
+}
+
 void	Client::setPassword(std::string password) {
 	this->_password = password;
 }
 
 std::string	Client::getUsername(void) {
 	return (this->_username);
+}
+
+std::string	Client::getNickname(void) {
+	return (this->_nickname);
 }
 
 std::string Client::getPassword(void) {
@@ -98,5 +108,8 @@ void	Client::setIsSic(bool is_sic) {
 
 std::ostream&	operator<<(std::ostream& os, Client& client) {
 	os << "Username: " << client.getUsername() << std::endl;
+	os << "Nickname: " << client.getNickname() << std::endl;
+	os << "Password: " << client.getPassword() << std::endl;
+	os << "is sic ? : " << client.getIsSic() << std::endl;
 	return (os);
 }
