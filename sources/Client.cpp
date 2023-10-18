@@ -56,8 +56,6 @@ void Client::handleMessage(char* message, Server &server) {
 	}
 }
 
-
-
 Client::~Client(void) {
 }
 
