@@ -37,14 +37,8 @@ void Client::parseMessage(char *buffer, Server &server) {
 		server.changeChannelMode(std::string(buffer + 5), *this);
 	else if (strncmp(buffer, "INVITE ", 7) == 0)
 		server.inviteUserToChannel(std::string(buffer + 7), *this);
-<<<<<<< HEAD
-	else if (strncmp(buffer, "DEBUG", 6) == 0)
-		server.debug();
-	//else if (strncmp(buffer, "TOPIC ", 6) == 0)
-=======
 	else if (strncmp(buffer, "TOPIC ", 6) == 0)
 		server.changeChannelTopic(std::string(buffer + 6), *this);
->>>>>>> qstrql
 	else 
 		throw std::runtime_error("Invalid command");
 }

@@ -33,6 +33,10 @@ void Channel::setClientLimit(size_t limit) {
 	this->client_limit = limit;
 }
 
+void Channel::setPassword(std::string password) {
+	this->_password = password;
+}
+
 std::string const	&Channel::getName(void) const {
 	return (this->_name);
 }
@@ -145,11 +149,11 @@ void Channel::addMode(std::string mode, std::string arg) {
 		this->invite_only = true;
 	else if (mode == "t") {
 		this->restrict_topic = true;
-		this->_topic = arg;
+		this->setTopic(arg);
 	}
 	else if (mode == "k") {
 		this->has_password = true;
-		this->_password = arg;
+		this->setPassword(arg);
 	}
 	else if (mode == "l")
 		this->has_clientlimit = true;
