@@ -31,6 +31,7 @@ class Channel {
 
 		void 				setName(std::string name);
 		void 				setTopic(std::string topic);
+		void				setPassword(std::string password);
 		void 				setCreator(std::string creator);
 		void 				setModes(std::string password);
 		void				setClientLimit(size_t limit);

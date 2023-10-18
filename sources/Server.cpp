@@ -303,6 +303,24 @@ void Server::changeChannelTopic(std::string input, Client &client) {
 	std::string channel;
 	std::string topic;
 
+	std::stringstream ss(input);
+	ss >> channel;
+	ss >> topic;
+	if (topic.length() > 50)
+		throw std::invalid_argument("Invalid topic");
+	if (utils::checkChannelName(channel) && this->ChannelExists(channel)) {
+		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
+			if (channel_it->getName() == channel) {
+				if (channel_it->isOp(client)) {
+					channel_it->setTopic(topic);
+					channel_it->setModes("t");
+				}
+			}
+			else {
+				throw std::invalid_argument("You are not op in this channel, you can not change its topic");
+			}
+		}
+	}
 }
 
 void Server::kickUserFromChannel(std::string input, Client &client) {
