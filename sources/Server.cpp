@@ -408,6 +408,7 @@ void Server::CheckActivity(void) {
 			int valread;
 			// if there is smthing in buffer join it at start of new buffer
 			valread = recv(client_socket, this->_buffer, 1024, MSG_DONTWAIT);
+			// MAYBE SHOULD STORE BUFFER IN AN STD STRING MESSAGE SO ITS EASIER INSTANTLY
 			if (valread == 0)
 				disconnected_clients.insert(std::pair<int, Client>(client_socket, it->second));
 			else if (valread < 0) {
