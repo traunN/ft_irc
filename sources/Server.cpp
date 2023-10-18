@@ -10,6 +10,7 @@ Server::Server(char const *argv1, char const *argv2) {
 		std::stringstream ss(argv1);
 		ss >> this->_port;
 		this->_password = argv2;
+		this->_partial_command = "";
 		try
 		{
 			this->Init();
@@ -405,6 +406,7 @@ void Server::CheckActivity(void) {
 			client_socket_sender = client_socket;
 			// Check if it was for closing, and also read the incoming message
 			int valread;
+			// if there is smthing in buffer join it at start of new buffer
 			valread = recv(client_socket, this->_buffer, 1024, MSG_DONTWAIT);
 			if (valread == 0)
 				disconnected_clients.insert(std::pair<int, Client>(client_socket, it->second));
@@ -415,7 +417,25 @@ void Server::CheckActivity(void) {
 					disconnected_clients.insert(std::pair<int, Client>(client_socket, it->second));
 			}
 			else {
-				// set the string terminating NULL byte on the end of the data read
+				this->_buffer[valread] = '\0';
+				// if last character isnt \n keep listening for more data and save buffer for later
+				if (this->_buffer[valread - 1] != '\n')
+				{
+					this->_partial_command += this->_buffer;
+					continue;
+				}
+				else {
+					if (!this->_partial_command.empty()) {
+						// make buffer larger to fit partial command
+						char *tmp = new char[1024 + this->_partial_command.length()];
+						strcpy(tmp, this->_partial_command.c_str());
+						strcat(tmp, this->_buffer);
+						strcpy(this->_buffer, tmp);
+						delete[] tmp;
+						this->_partial_command.clear();
+					}
+				}
+				this->_buffer[this->_partial_command.length() + valread] = '\0'; 
 				if (this->_buffer[valread - 2] == '\r' && this->_buffer[valread - 1] == '\n')
 				{
 					it->second.setIsSic(true);
@@ -453,8 +473,8 @@ void Server::CheckActivity(void) {
 				else
 				{
 					// if /r /n at the end of buffer remove it
-					
 					it->second.handleMessage(this->_buffer, *this);
+					memset(this->_buffer, 0, 1024);
 				}
 			}
 		}

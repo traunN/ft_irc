@@ -24,6 +24,7 @@ Client	&Client::operator=(Client const &rhs)
 }
 
 void Client::parseMessage(char *buffer, Server &server) {
+	std::cout << "Parsing message: " << buffer << std::endl;
 	if (strncmp(buffer, "JOIN ", 5) == 0)
 		server.makeUserJoinChannel(std::string(buffer + 5), *this);
 	else if (strncmp(buffer, "PART ", 6) == 0)

@@ -16,6 +16,7 @@ class Server {
 		pthread_t _thread;
 		struct sockaddr_in _address;
 		char _buffer[1024];
+		std::string _partial_command;
 		std::string _password;
 		std::vector<Channel> _channels;
 		std::map<int, Client> _clients;
