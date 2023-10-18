@@ -315,6 +315,8 @@ void Server::changeChannelTopic(std::string input, Client &client) {
 					throw std::invalid_argument("This channel has a restricted topic, you can not change it");
 				if (topic.empty() && !channel_it->getTopic().empty())
 					std::cout << channel_it->getTopic() << std::endl;
+				else if (topic.empty() && channel_it->getTopic().empty())
+					throw std::invalid_argument("This channel has no topic");
 				if (channel_it->isOp(client))
 					channel_it->setTopic(utils::trimWhitespace(topic));
 			}
