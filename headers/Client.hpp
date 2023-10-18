@@ -8,14 +8,14 @@ class Client
 {
 	private:
 		int		_socket;
-		std::string _username;
 		std::string _nickname;
+		std::string _username;
 		std::string _password;
 		bool	_operator;
 		bool	_is_sic;
 	public:
 		Client(void);
-		Client(int socket, std::string _username, std::string _password);
+		Client(int socket, std::string nickname, std::string username, std::string password);
 		Client(Client const &src);
 		virtual ~Client(void);
 

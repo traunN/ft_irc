@@ -56,7 +56,8 @@ class Server {
 		void inviteUserToChannel(std::string input, Client &client);
 		void changeChannelTopic(std::string input, Client &client);
 
-		void handleNickname(int client_socket, std::map<int, Client>::iterator it);
+		void handleNickname(int client_socket, Client &client);
+		void handleUsername(int client_socket, Client &client);
 		void handlePassword(int client_socket, std::map<int, Client>::iterator it);
 		void returnError(int client_socket, std::string error);
 		void sendMsgToSocket(int client_socket, std::string message);

@@ -61,7 +61,7 @@ void Server::ProcessNewClient(void) {
 	// Send welcome message
 	this->sendMsgToSocket(new_socket, "Enter PASS :\n");
 	// Add the new client to the map with an empty username and password
-	Client client(new_socket, "", "");
+	Client client(new_socket, "", "", "");
 	this->_clients.insert(std::pair<int, Client>(new_socket, client));
 }
 
@@ -170,7 +170,8 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 				// while nickname is not set prompt for nickname
 				memset(this->_buffer, 0, 1024);
 				strcpy(this->_buffer, nickname.c_str());
-				this->handleNickname(client_socket, it);
+				this->handleNickname(client_socket, it->second);
+				this->handleUsername(client_socket, it->second);
 			}
 		}
 		else {
@@ -354,7 +355,7 @@ void Server::kickUserFromChannel(std::string input, Client &client) {
 	}
 }
 
-void Server::handleNickname(int client_socket, std::map<int, Client>::iterator it) {
+void Server::handleNickname(int client_socket, Client &client) {
 	// Check if the username is already taken
 
 	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
@@ -370,12 +371,28 @@ void Server::handleNickname(int client_socket, std::map<int, Client>::iterator i
 		return ;
 	}
 	// Nickname is valid, set the username and send a welcome message
-	it->second.setNickname(this->_buffer);
-	it->second.setUsername(this->_buffer);
+	client.setNickname(this->_buffer);
 	// Ask for a username
+	this->sendMsgToSocket(client_socket, "Enter USER :\n");
+}
 
-	this->sendMsgToSocket(client_socket, "Welcome to the chat " + std::string(this->_buffer) + "!\n");
-	std::cout << "New client " << this->_buffer << " connected" << std::endl;
+void Server::handleUsername(int client_socket, Client &client) {
+	// Check if the username is already taken
+	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
+		if (client_it->second.getUsername() == this->_buffer) {
+			this->returnError(client_socket, "Username already taken");
+			this->sendMsgToSocket(client_socket, "Enter USER :\n");
+			return ;
+		}
+	}
+	if (strlen(this->_buffer) > 9 || strlen(this->_buffer) < 1) {
+		this->returnError(client_socket, "Invalid username lenght");
+		this->sendMsgToSocket(client_socket, "Enter USER :\n");
+		return ;
+	}
+	client.setUsername(this->_buffer);
+	this->sendMsgToSocket(client_socket, "Welcome to the chat " + client.getNickname() + "!\n");
+	std::cout << "New client " << client.getNickname() << " connected" << std::endl;
 }
 
 void Server::CheckActivity(void) {
@@ -424,7 +441,13 @@ void Server::CheckActivity(void) {
 				{
 					if (it->second.getIsSic() && this->_buffer[0] == 'n' && this->_buffer[1] == ' ')
 						strcpy(this->_buffer, this->_buffer + 2);
-					this->handleNickname(client_socket, it);
+					this->handleNickname(client_socket, it->second);
+				}
+				else if (it->second.getUsername() == "")
+				{
+					if (it->second.getIsSic() && this->_buffer[0] == 'u' && this->_buffer[1] == ' ')
+						strcpy(this->_buffer, this->_buffer + 2);
+					this->handleUsername(client_socket, it->second);
 				}
 				// If the client has entered both their password and username, handle the received data as a chat message
 				else
@@ -439,7 +462,7 @@ void Server::CheckActivity(void) {
 	// Close disconnected clients
 	for (std::map<int, Client>::iterator it = disconnected_clients.begin(); it != disconnected_clients.end(); it++)
 	{
-		std::cout << it->second.getNickname() << " disconnected" << std::endl;
+		std::cout << "User " << it->second.getNickname() << " disconnected" << std::endl;
 		close(it->first);
 		this->_clients.erase(it->second.getSocket());
 	}
