@@ -16,6 +16,7 @@ class Server {
 		pthread_t _thread;
 		struct sockaddr_in _address;
 		std::string _message;
+		std::string _temp;
 		std::string _password;
 		std::vector<Channel> _channels;
 		std::map<int, Client> _clients;

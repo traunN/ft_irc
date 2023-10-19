@@ -419,12 +419,15 @@ void Server::CheckActivity(void) {
 			}
 			else {
 				//remove \n at end of message
-				this->_message.erase(std::remove(this->_message.begin(), this->_message.end(), '\n'), this->_message.end());
 				// if last character isnt \n keep listening for more data and save buffer for later
-				// if (this->_message[valread - 1] != '\n')
-				// {
-				// 	continue;
-				// }
+				if (this->_message[valread - 1] != '\n')
+				{
+					this->_temp += this->_message;
+					continue;
+				}
+				this->_message = this->_temp + this->_message;
+				this->_temp = "";
+				this->_message.erase(std::remove(this->_message.begin(), this->_message.end(), '\n'), this->_message.end());
 				// if (this->_message[valread - 2] == '\r' && this->_message[valread - 1] == '\n')
 				// {
 				// 	it->second.setIsSic(true);
@@ -494,7 +497,8 @@ void Server::Init(void) {
 }
 
 std::string Server::getPassword(void) {
-	return (this->_password);
+	return (this->_password);			std::string temp = "";
+
 }
 
 std::string Server::getMessage(void) {
