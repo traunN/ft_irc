@@ -10,7 +10,6 @@ Server::Server(char const *argv1, char const *argv2) {
 		std::stringstream ss(argv1);
 		ss >> this->_port;
 		this->_password = argv2;
-		this->_partial_command = "";
 		try
 		{
 			this->Init();
@@ -104,19 +103,15 @@ void Server::sendMsgToSocket(int client_socket, std::string message) {
 // REMEMBER TO PROMPT FOR USERNAME WHEN USER connect
 
 void Server::sendMsgToUsers(std::string message, Client &client) {
-	std::vector <std::string> delimiters;
-	delimiters.push_back(" ");
-	std::vector<std::string> words = utils::split(message, delimiters);
-	std::string first_word = words[1];
+	std::stringstream ss(message);
+	std::string destination;
 	std::string full_message;
+	ss >> destination;
+	getline(ss, full_message);
 
-	for (std::vector<std::string>::iterator it = words.begin() + 2; it != words.end(); it++) {
-		full_message += *it;
-		full_message += " ";
-	}
 	// check if its a channel name send to all users in this channel expect client
-	if (first_word[0] == '#') {
-		std::string channel_name = first_word;
+	if (destination[0] == '#') {
+		std::string channel_name = destination;
 		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
 			if (channel_it->getName() == channel_name) {
 				for (std::map<std::string, Client *>::iterator client_it = channel_it->getClients().begin(); client_it != channel_it->getClients().end(); client_it++) {
@@ -130,7 +125,7 @@ void Server::sendMsgToUsers(std::string message, Client &client) {
 	}
 	else
 	{
-		std::string username = first_word;
+		std::string username = destination;
 		for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
 			if (client_it->second.getNickname() == username) {
 				this->sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + ": " + message + "\n");
@@ -149,7 +144,7 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 	std::vector <std::string> delimiters;
 	delimiters.push_back(" ");
 	delimiters.push_back("\n");
-	std::vector<std::string> words = utils::split(this->_buffer, delimiters);
+	std::vector<std::string> words = utils::split(this->_message, delimiters);
 	std::string first_word = words[0];
 	// FROM SIC CLIENT
 	if (first_word == "PASS") {
@@ -169,8 +164,8 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 				std::string nickname = words[3];
 				nickname.erase(std::remove_if(nickname.begin(), nickname.end(), ::isspace), nickname.end());
 				// while nickname is not set prompt for nickname
-				memset(this->_buffer, 0, 1024);
-				strcpy(this->_buffer, nickname.c_str());
+				this->_message = "";
+				this->_message = nickname;
 				this->handleNickname(client_socket, it->second);
 				this->handleUsername(client_socket, it->second);
 			}
@@ -183,7 +178,7 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 	}
 	else {
 		// entering password manually using buffer
-		std::string enteredPassword = this->_buffer;
+		std::string enteredPassword = this->_message;
 		enteredPassword.erase(std::remove_if(enteredPassword.begin(), enteredPassword.end(), ::isspace), enteredPassword.end());
 		std::string storedPassword = this->_password;
 		storedPassword.erase(std::remove_if(storedPassword.begin(), storedPassword.end(), ::isspace), storedPassword.end());
@@ -192,12 +187,14 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 			this->sendMsgToSocket(client_socket, "Password accepted\n");
 			it->second.setPassword(enteredPassword);
 			this->sendMsgToSocket(client_socket, "Enter NICK :\n");
-			memset(this->_buffer, 0, 1024);
+			this->_message = "";
 		}
 		else {
 			this->returnError(client_socket, "Incorrect password");
+			std::cout << "password recieved : " << this->_message << std::endl;
+			std::cout << "password stored : " << this->_password << std::endl;
 			this->sendMsgToSocket(client_socket, "Enter PASS :\n");
-			memset(this->_buffer, 0, 1024);
+			this->_message = "";
 		}
 	}
 }
@@ -337,7 +334,7 @@ void Server::kickUserFromChannel(std::string input, Client &client) {
 	ss >> nickname;
 	ss >> channel;
 	std::cout << nickname << " " << channel << std::endl;
-	if (utils::checkChannelName(channel) && this->ChannelExists(channel)) {
+	if (utils::checkChannelName(channel) && this->ChannelExists(channel)) { 
 		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
 			if (channel_it->getName() == channel) { std::cout << "kick : channel : " << channel << std::endl;
 				if (channel_it->isOp(client)) {
@@ -360,19 +357,19 @@ void Server::handleNickname(int client_socket, Client &client) {
 	// Check if the username is already taken
 
 	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
-		if (client_it->second.getNickname() == this->_buffer) {
+		if (client_it->second.getNickname() == this->_message) {
 			this->returnError(client_socket, "Nickname already taken");
 			this->sendMsgToSocket(client_socket, "Enter NICK :\n");
 			return ;
 		}
 	}
-	if (strlen(this->_buffer) > 9 || strlen(this->_buffer) < 1) {
+	if (this->_message.length() > 9 || this->_message.length() < 1) {
 		this->returnError(client_socket, "Invalid username lenght");
 		this->sendMsgToSocket(client_socket, "Enter NICK :\n");
 		return ;
 	}
 	// Nickname is valid, set the username and send a welcome message
-	client.setNickname(this->_buffer);
+	client.setNickname(this->_message);
 	// Ask for a username
 	this->sendMsgToSocket(client_socket, "Enter USER :\n");
 }
@@ -380,18 +377,18 @@ void Server::handleNickname(int client_socket, Client &client) {
 void Server::handleUsername(int client_socket, Client &client) {
 	// Check if the username is already taken
 	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
-		if (client_it->second.getUsername() == this->_buffer) {
+		if (client_it->second.getUsername() == this->_message) {
 			this->returnError(client_socket, "Username already taken");
 			this->sendMsgToSocket(client_socket, "Enter USER :\n");
 			return ;
 		}
 	}
-	if (strlen(this->_buffer) > 9 || strlen(this->_buffer) < 1) {
+	if (this->_message.length() > 9 || this->_message.length() < 1) {
 		this->returnError(client_socket, "Invalid username lenght");
 		this->sendMsgToSocket(client_socket, "Enter USER :\n");
 		return ;
 	}
-	client.setUsername(this->_buffer);
+	client.setUsername(this->_message);
 	this->sendMsgToSocket(client_socket, "Welcome to the chat " + client.getNickname() + "!\n");
 	std::cout << "New client " << client.getNickname() << " connected" << std::endl;
 }
@@ -406,8 +403,11 @@ void Server::CheckActivity(void) {
 			client_socket_sender = client_socket;
 			// Check if it was for closing, and also read the incoming message
 			int valread;
+			char *buffer = new char[1024];
 			// if there is smthing in buffer join it at start of new buffer
-			valread = recv(client_socket, this->_buffer, 1024, MSG_DONTWAIT);
+			valread = recv(client_socket, buffer, 1024, MSG_DONTWAIT);
+			this->_message = buffer;
+			delete[] buffer;
 			// MAYBE SHOULD STORE BUFFER IN AN STD STRING MESSAGE SO ITS EASIER INSTANTLY
 			if (valread == 0)
 				disconnected_clients.insert(std::pair<int, Client>(client_socket, it->second));
@@ -418,35 +418,21 @@ void Server::CheckActivity(void) {
 					disconnected_clients.insert(std::pair<int, Client>(client_socket, it->second));
 			}
 			else {
-				this->_buffer[valread] = '\0';
+				//remove \n at end of message
+				this->_message.erase(std::remove(this->_message.begin(), this->_message.end(), '\n'), this->_message.end());
 				// if last character isnt \n keep listening for more data and save buffer for later
-				if (this->_buffer[valread - 1] != '\n')
-				{
-					this->_partial_command += this->_buffer;
-					continue;
-				}
-				else {
-					if (!this->_partial_command.empty()) {
-						// make buffer larger to fit partial command
-						char *tmp = new char[1024 + this->_partial_command.length()];
-						strcpy(tmp, this->_partial_command.c_str());
-						strcat(tmp, this->_buffer);
-						strcpy(this->_buffer, tmp);
-						delete[] tmp;
-						this->_partial_command.clear();
-					}
-				}
-				this->_buffer[this->_partial_command.length() + valread] = '\0'; 
-				if (this->_buffer[valread - 2] == '\r' && this->_buffer[valread - 1] == '\n')
-				{
-					it->second.setIsSic(true);
-					this->_buffer[valread - 2] = '\0';
-				}
-				else
-				{
-					it->second.setIsSic(false);
-					this->_buffer[valread - 1] = '\0';
-				}
+				// if (this->_message[valread - 1] != '\n')
+				// {
+				// 	continue;
+				// }
+				// if (this->_message[valread - 2] == '\r' && this->_message[valread - 1] == '\n')
+				// {
+				// 	it->second.setIsSic(true);
+				// }
+				// else
+				// {
+				// 	it->second.setIsSic(false);
+				// }
 				// If the client hasn't entered their password yet, check the received data against the password
 				if (it->second.getPassword() == "")
 				{
@@ -460,22 +446,21 @@ void Server::CheckActivity(void) {
 				// If the client has entered their password but not their username, set the received data as the username
 				else if (it->second.getNickname() == "")
 				{
-					if (it->second.getIsSic() && this->_buffer[0] == 'n' && this->_buffer[1] == ' ')
-						strcpy(this->_buffer, this->_buffer + 2);
+					if (it->second.getIsSic() && this->_message[0] == 'n' && this->_message[1] == ' ')
+						this->_message += 2;
 					this->handleNickname(client_socket, it->second);
 				}
 				else if (it->second.getUsername() == "")
 				{
-					if (it->second.getIsSic() && this->_buffer[0] == 'u' && this->_buffer[1] == ' ')
-						strcpy(this->_buffer, this->_buffer + 2);
+					if (it->second.getIsSic() && this->_message[0] == 'u' && this->_message[1] == ' ')
+						this->_message += 2;
 					this->handleUsername(client_socket, it->second);
 				}
 				// If the client has entered both their password and username, handle the received data as a chat message
 				else
 				{
 					// if /r /n at the end of buffer remove it
-					it->second.handleMessage(this->_buffer, *this);
-					memset(this->_buffer, 0, 1024);
+					it->second.handleMessage(this->_message, *this);
 				}
 			}
 		}
@@ -510,6 +495,10 @@ void Server::Init(void) {
 
 std::string Server::getPassword(void) {
 	return (this->_password);
+}
+
+std::string Server::getMessage(void) {
+	return (this->_message);
 }
 
 std::vector<Channel> Server::getChannels(void) {

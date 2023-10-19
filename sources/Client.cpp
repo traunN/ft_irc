@@ -23,29 +23,53 @@ Client	&Client::operator=(Client const &rhs)
 	return (*this);
 }
 
-void Client::parseMessage(char *buffer, Server &server) {
-	std::cout << "Parsing message: " << buffer << std::endl;
-	if (strncmp(buffer, "JOIN ", 5) == 0)
-		server.makeUserJoinChannel(std::string(buffer + 5), *this);
-	else if (strncmp(buffer, "PART ", 6) == 0)
-		server.makeUserLeaveChannel(std::string(buffer + 6), *this);
-	else if (strncmp(buffer, "NICK ", 5) == 0)
-		server.changeNickname(std::string(buffer + 5), *this);
-	else if (strncmp(buffer, "KICK ", 5) == 0)
-		server.kickUserFromChannel(std::string(buffer + 5), *this);
-	else if (strncmp(buffer, "PRIVMSG ", 8) == 0)
-		server.sendMsgToUsers(std::string(buffer + 7), *this);
-	else if (strncmp(buffer, "MODE ", 5) == 0)
-		server.changeChannelMode(std::string(buffer + 5), *this);
-	else if (strncmp(buffer, "INVITE ", 7) == 0)
-		server.inviteUserToChannel(std::string(buffer + 7), *this);
-	else if (strncmp(buffer, "TOPIC ", 6) == 0)
-		server.changeChannelTopic(std::string(buffer + 6), *this);
-	else 
+void Client::parseMessage(std::string message, Server &server) {
+	// Split the message into tokens for command and arguments
+	std::istringstream iss(message);
+	std::string command;
+	iss >> command;
+
+	if (command == "JOIN") {
+		std::string channel;
+		iss >> channel;
+		server.makeUserJoinChannel(channel, *this);
+	} else if (command == "PART") {
+		std::string channel;
+		iss >> channel;
+		server.makeUserLeaveChannel(channel, *this);
+	} else if (command == "NICK") {
+		std::string nickname;
+		iss >> nickname;
+		server.changeNickname(nickname, *this);
+	} else if (command == "KICK") {
+		std::string channel;
+		iss >> channel;
+		server.kickUserFromChannel(channel, *this);
+	} else if (command == "PRIVMSG") {
+		std::string message;
+		std::string targetUser;
+		iss >> targetUser;
+		std::getline(iss, message);
+		server.sendMsgToUsers(targetUser + message, *this);
+	} else if (command == "MODE") {
+		std::string channel;
+		iss >> channel;
+		server.changeChannelMode(channel, *this);
+	} else if (command == "INVITE") {
+		std::string username;
+		iss >> username;
+		server.inviteUserToChannel(username, *this);
+	} else if (command == "TOPIC") {
+		std::string channel;
+		iss >> channel;
+		server.changeChannelTopic(channel, *this);
+	} else {
 		throw std::runtime_error("Invalid command");
+	}
 }
 
-void Client::handleMessage(char* message, Server &server) {
+
+void Client::handleMessage(std::string message, Server &server) {
 	std::map<int, Client> clients = server.getClients();
 	try {
 		// parseMessage needs to be a method in the Client or Server class or a global function

@@ -15,8 +15,7 @@ class Server {
 		int _port;
 		pthread_t _thread;
 		struct sockaddr_in _address;
-		char _buffer[1024];
-		std::string _partial_command;
+		std::string _message;
 		std::string _password;
 		std::vector<Channel> _channels;
 		std::map<int, Client> _clients;
@@ -33,7 +32,7 @@ class Server {
 
 		std::string getName(void);
 		std::string getPassword(void);
-		char *getBuffer(void);
+		std::string getMessage(void);
 		std::vector<Channel> getChannels(void);
 		std::map<int, Client> getClients(void);
 		void setName(std::string name);
