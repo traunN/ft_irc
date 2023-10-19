@@ -33,8 +33,8 @@ class Client
 		void	setOperator(bool op);
 		void	setIsSic(bool is_sic);
 
-		void	handleMessage(char* message, Server &server);
-		void	parseMessage(char *buffer, Server &server);
+		void	handleMessage(std::string message, Server &server);
+		void	parseMessage(std::string message, Server &server);
 };
 
 std::ostream&	operator<<(std::ostream& os, Client& client);
