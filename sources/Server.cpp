@@ -396,12 +396,12 @@ void Server::handleUsername(int client_socket, Client &client) {
 
 void Server::CheckActivity(void) {
 	std::map<int, Client> disconnected_clients;
-	int client_socket_sender;
+	//int client_socket_sender;
 	for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++) {
 		int client_socket = it->second.getSocket();
 		if (FD_ISSET(client_socket, &this->_readfds)) 
 		{
-			client_socket_sender = client_socket;
+			//client_socket_sender = client_socket;
 			// Check if it was for closing, and also read the incoming message
 			int valread;
 			char *buffer = new char[1024];
