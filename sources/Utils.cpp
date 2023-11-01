@@ -1,4 +1,5 @@
 #include "Utils.hpp"
+#include <openssl/sha.h>
 
 namespace utils {
 	void	ParseArgs(int argc, char **argv) {
@@ -53,5 +54,24 @@ namespace utils {
 		std::string::size_type strEnd = str.find_last_not_of(whitespace);
 		std::string::size_type strRange = strEnd - strBegin + 1;
 		return str.substr(strBegin, strRange);
-	}	
+	}
+
+	std::string hashPassword(std::string password) {
+	unsigned char hash[SHA256_DIGEST_LENGTH];
+	unsigned const char* data = reinterpret_cast<const unsigned char*>(password.c_str());
+	SHA256(data, password.size(), hash);
+
+	std::stringstream ss;
+	for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+		ss << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
+	}
+	return (ss.str());
+}
+
+	bool checkPassword(std::string providedPassword, std::string _hashedPassword) {
+    std::string pw_hash = hashPassword(providedPassword);
+    if (pw_hash != _hashedPassword)
+        return false;
+    return true;
+}
 }

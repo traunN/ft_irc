@@ -8,7 +8,6 @@ class Channel {
     private:
 		std::string _name;
 		std::map<std::string, Client *> _clients;
-		//Password _password;
 		std::string _password;
 		std::string _mode;
 

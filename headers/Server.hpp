@@ -36,7 +36,6 @@ class Server {
 		std::string getMessage(void);
 		std::vector<Channel> getChannels(void);
 		std::map<int, Client> getClients(void);
-		void setName(std::string name);
 		void setPassword(std::string password);
 		void setChannels(std::vector<Channel> channels);
 
