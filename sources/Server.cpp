@@ -1,8 +1,11 @@
 #include "Server.hpp"
 
 Server::Server(char const *argv1, char const *argv2) {
-	if (!this->isServerRunning(atoi(argv1)))
-	{
+	this->_server_fd = 0;
+	this->_max_fd = 0;
+	this->_new_socket = 0;
+	this->_valread = 0;
+	if (!this->isServerRunning(atoi(argv1))) {
 		this->_channels = std::vector<Channel>();
 		this->_clients = std::map<int, Client>();
 		this->_opt = 1;
@@ -10,12 +13,10 @@ Server::Server(char const *argv1, char const *argv2) {
 		std::stringstream ss(argv1);
 		ss >> this->_port;
 		this->_password = argv2;
-		try
-		{
+		try {
 			this->Init();
 		}
-		catch (std::exception &e)
-		{
+		catch (std::exception &e) {
 			std::cerr << e.what() << std::endl;
 			return;
 		}
@@ -434,8 +435,7 @@ void Server::CheckActivity(void) {
 				// 	it->second.setIsSic(false);
 				// }
 				// If the client hasn't entered their password yet, check the received data against the password
-				if (it->second.getPassword() == "")
-				{
+				if (it->second.getPassword() == "") {
 					try {
 						this->handlePassword(client_socket, it);
 					}
@@ -444,21 +444,18 @@ void Server::CheckActivity(void) {
 					}
 				}
 				// If the client has entered their password but not their username, set the received data as the username
-				else if (it->second.getNickname() == "")
-				{
+				else if (it->second.getNickname() == "") {
 					if (it->second.getIsSic() && this->_message[0] == 'n' && this->_message[1] == ' ')
 						this->_message += 2;
 					this->handleNickname(client_socket, it->second);
 				}
-				else if (it->second.getUsername() == "")
-				{
+				else if (it->second.getUsername() == "") {
 					if (it->second.getIsSic() && this->_message[0] == 'u' && this->_message[1] == ' ')
 						this->_message += 2;
 					this->handleUsername(client_socket, it->second);
 				}
 				// If the client has entered both their password and username, handle the received data as a chat message
-				else
-				{
+				else {
 					// if /r /n at the end of buffer remove it
 					it->second.handleMessage(this->_message, *this);
 				}

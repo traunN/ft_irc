@@ -1,13 +1,18 @@
 #include "Channel.hpp"
 #include "Client.hpp"
 
-Channel::Channel(std::string name, Client &creator, std::string password): _name(name), _password(password), _creator(creator.getUsername()), invite_only(false), client_count(0){
-	this->addClient(creator);
-	this->addOp(creator);
+Channel::Channel(std::string name, Client &creator, std::string password) {
+	this->_name = name;
+	this->_password = password;
+	this->_creator = creator.getUsername();
+	this->invite_only = false;
 	this->restrict_topic = false;
 	this->has_password = false;
 	this->has_clientlimit = false;
 	this->client_limit = 100;
+	this->client_count = 0;
+	this->addClient(creator);
+	this->addOp(creator);
 }
 
 Channel::~Channel(void) {
@@ -66,7 +71,7 @@ int Channel::addClient(Client &client) {
 		std::cout << "Client already in channel" << std::endl;
 		return 1;
 	}
-	else if (isFull()) {
+	else if (this->isFull()) {
 		std::cout << "Channel is full" << std::endl;
 		return 1;
 	}
@@ -137,7 +142,9 @@ bool Channel::isClientInChannel(Client &client) const {
 }
 
 bool Channel::isFull(void) const {
-	return (this->client_count >= this->client_limit);
+	if (this->client_count >= this->client_limit)
+		return true;
+	return false;
 }
 
 void Channel::addInvited(std::string username) {
