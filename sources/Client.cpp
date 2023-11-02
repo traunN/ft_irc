@@ -42,9 +42,7 @@ void Client::parseMessage(std::string message, Server &server) {
 		iss >> nickname;
 		server.changeNickname(nickname, *this);
 	} else if (command == "KICK") {
-		std::string channel;
-		iss >> channel;
-		server.kickUserFromChannel(channel, *this);
+		server.kickUserFromChannel(message, *this);
 	} else if (command == "PRIVMSG") {
 		std::string message;
 		std::string targetUser;

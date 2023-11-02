@@ -204,13 +204,13 @@ void Server::makeUserJoinChannel(std::string channel, Client &client) {
 	if (!this->ChannelExists(channel) && utils::checkChannelName(channel)) {
 		Channel new_channel(channel, client, "");
 		this->AddChannel(new_channel);
-		std::cout << "User " << client.getNickname() << " creates " << channel << std::endl;
+		sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " joins " + channel + "\n");
 	}
 	else {
 		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
 			if (channel_it->getName() == channel) {
 				if (channel_it->addClient(client) == 0)
-					std::cout << "User " << client.getNickname() << " joins " << channel << std::endl;
+					sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " joins " + channel + "\n");
 			}
 		}
 	}
@@ -221,12 +221,12 @@ void Server::makeUserLeaveChannel(std::string channel, Client &client) {
 		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
 			if (channel_it->getName() == channel) {
 				if (channel_it->isClientInChannel(client)) {
-					std::cout << "User " << client.getNickname() << " leaves " << channel << std::endl;
+					sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " leaves " + channel + "\n");
 					channel_it->removeClient(client);
 				}
 			}
 			else {
-				std::cout << "User " << client.getNickname() << " is not in channel " << channel << std::endl;
+				sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " is not in " + channel + "\n");
 			}
 		}
 	}
@@ -241,7 +241,7 @@ void Server::changeNickname(std::string username, Client &client) {
 			if (client_it->second.getNickname() == username)
 				throw std::invalid_argument("Nickname already taken");
 		}
-		std::cout << "User " << client.getNickname() << " changed username to " << username << std::endl;
+		sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " changed nickname to " + username + "\n");
 		client.setNickname(username);
 	}
 }
@@ -342,11 +342,11 @@ void Server::kickUserFromChannel(std::string input, Client &client) {
 	std::cout << nickname << " " << channel << std::endl;
 	if (utils::checkChannelName(channel) && this->ChannelExists(channel)) { 
 		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
-			if (channel_it->getName() == channel) { std::cout << "kick : channel : " << channel << std::endl;
+			if (channel_it->getName() == channel) {
 				if (channel_it->isOp(client)) {
 					for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
 						if (client_it->second.getNickname() == nickname) {
-							std::cout << "User " << client.getNickname() << " kicked " << nickname << " from " << channel << std::endl;
+							sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + " kicked " + nickname + " from " + channel + "\n");
 							channel_it->removeClient(client_it->second);
 						}
 					}
