@@ -275,6 +275,7 @@ void Server::changeChannelMode(std::string input, Client &client) {
 	std::string arg;
 
 	std::stringstream ss(input);
+	ss.ignore(5);
 	ss >> channel;
 	ss >> mode;
 	ss >> arg;
@@ -304,6 +305,7 @@ void Server::changeChannelTopic(std::string input, Client &client) {
 	std::string topic;
 
 	std::stringstream ss(input);
+	ss.ignore(6);
 	ss >> channel;
 	getline(ss, topic);
 	if (topic.length() > 50)
@@ -314,7 +316,7 @@ void Server::changeChannelTopic(std::string input, Client &client) {
 				if (channel_it->isRestrictedTopic() && !channel_it->isOp(client))
 					throw std::invalid_argument("This channel has a restricted topic, you can not change it");
 				if (topic.empty() && !channel_it->getTopic().empty())
-					std::cout << channel_it->getTopic() << std::endl;
+					sendMsgToSocket(client.getSocket(), channel_it->getTopic() + "\n");
 				else if (topic.empty() && channel_it->getTopic().empty())
 					throw std::invalid_argument("This channel has no topic");
 				if (channel_it->isOp(client))
@@ -324,6 +326,9 @@ void Server::changeChannelTopic(std::string input, Client &client) {
 				throw std::invalid_argument("You are not op in this channel, you can not change its topic");
 			}
 		}
+	}
+	else {
+		throw std::invalid_argument("Channel does not exist");
 	}
 }
 

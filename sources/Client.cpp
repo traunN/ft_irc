@@ -52,17 +52,13 @@ void Client::parseMessage(std::string message, Server &server) {
 		std::getline(iss, message);
 		server.sendMsgToUsers(targetUser + message, *this);
 	} else if (command == "MODE") {
-		std::string channel;
-		iss >> channel;
-		server.changeChannelMode(channel, *this);
+		server.changeChannelMode(message, *this);
 	} else if (command == "INVITE") {
 		std::string username;
 		iss >> username;
 		server.inviteUserToChannel(username, *this);
 	} else if (command == "TOPIC") {
-		std::string channel;
-		iss >> channel;
-		server.changeChannelTopic(channel, *this);
+		server.changeChannelTopic(message, *this);
 	} else {
 		throw std::runtime_error("Invalid command");
 	}
