@@ -103,6 +103,26 @@ void Server::sendMsgToSocket(int client_socket, std::string message) {
 
 // REMEMBER TO PROMPT FOR USERNAME WHEN USER connect
 
+std::vector<Channel>::iterator Server::getChannel(std::string channel_name) {
+	std::vector<Channel>::iterator it = this->_channels.begin();
+	while (it != this->_channels.end()) {
+		if (it->getName() == channel_name)
+			return (it);
+		it++;
+	}
+	return (it);
+}
+
+std::map<int, Client>::iterator Server::getClient(std::string client_name) {
+	std::map<int, Client>::iterator it = this->_clients.begin();
+	while (it != this->_clients.end()) {
+		if (it->second.getNickname() == client_name)
+			return (it);
+		it++;
+	}
+	return (it);
+}
+
 void Server::sendMsgToUsers(std::string message, Client &client) {
 	std::stringstream ss(message);
 	std::string destination;
@@ -113,27 +133,19 @@ void Server::sendMsgToUsers(std::string message, Client &client) {
 	// check if its a channel name send to all users in this channel expect client
 	if (destination[0] == '#') {
 		std::string channel_name = destination;
-		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
-			if (channel_it->getName() == channel_name) {
-				for (std::map<std::string, Client *>::iterator client_it = channel_it->getClients().begin(); client_it != channel_it->getClients().end(); client_it++) {
-					// cout buffer from client
-					if (!client_it->second->getIsSic() || client_it->second->getSocket() != client.getSocket())
-						this->sendMsgToSocket(client_it->second->getSocket(), channel_name + "\t <" + client.getNickname() + "> : " + full_message + "\n");
-				}
-				return ;
-			}
+		std::vector<Channel>::iterator channel_it = this->getChannel(channel_name);
+		for (std::map<std::string, Client *>::iterator client_it = channel_it->getClients().begin(); client_it != channel_it->getClients().end(); client_it++) {
+			// cout buffer from client
+			if (!client_it->second->getIsSic() || client_it->second->getSocket() != client.getSocket())
+				this->sendMsgToSocket(client_it->second->getSocket(), channel_name + "\t <" + client.getNickname() + "> : " + full_message + "\n");
 		}
+		return ;
 	}
-	else
-	{
+	else {
 		std::string username = destination;
-		for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
-			if (client_it->second.getNickname() == username) {
-				this->sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + ": " + message + "\n");
-				return ;
-			}
-		}
-
+		std::map<int, Client>::iterator client_it = this->getClient(username);
+		this->sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + ": " + message + "\n");
+			return ;
 	}
 }
 
@@ -207,27 +219,23 @@ void Server::makeUserJoinChannel(std::string channel, Client &client) {
 		sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " joins " + channel + "\n");
 	}
 	else {
-		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
+		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
 			if (channel_it->getName() == channel) {
 				if (channel_it->addClient(client) == 0)
 					sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " joins " + channel + "\n");
-			}
 		}
 	}
 }
 
 void Server::makeUserLeaveChannel(std::string channel, Client &client) {
 	if (this->ChannelExists(channel) && utils::checkChannelName(channel)) {
-		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
-			if (channel_it->getName() == channel) {
-				if (channel_it->isClientInChannel(client)) {
-					sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " leaves " + channel + "\n");
-					channel_it->removeClient(client);
-				}
-			}
-			else {
-				sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " is not in " + channel + "\n");
-			}
+		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
+		if (channel_it->isClientInChannel(client)) {
+			sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " leaves " + channel + "\n");
+			channel_it->removeClient(client);
+		}
+		else {
+			sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " is not in " + channel + "\n");
 		}
 	}
 	else {
@@ -256,16 +264,11 @@ void Server::inviteUserToChannel(std::string input, Client &client) {
 	if (nickname.length() > 50)
 		throw std::invalid_argument("Invalid nickname");
 	if (utils::checkChannelName(channel) && this->ChannelExists(channel)) {
-		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
-			if (channel_it->getName() == channel) {
-				if (channel_it->isOp(client)) {
-					channel_it->addInvited(nickname);
-				}
-			}
-			else {
-				throw std::invalid_argument("You are not op in this channel, you can not invite users");
-			}
-		}
+		std::vector<Channel>::iterator channel_it = this->getChannel(channel); 
+		if (channel_it->isOp(client))
+			channel_it->addInvited(nickname);
+		else
+			throw std::invalid_argument("You are not op in this channel, you can not invite users");
 	}
 }
 
@@ -282,20 +285,17 @@ void Server::changeChannelMode(std::string input, Client &client) {
 	if (mode.length() < 2 || mode.length() > 3)
 		throw std::invalid_argument("Invalid mode, use MODE <#channel> <+/-mode> (i : invite only, t: topic, k: password, o: give/take op, l: client limit)");
 	if (this->ChannelExists(channel) && utils::checkChannelName(channel)) {
-		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
-			if (channel_it->getName() == channel) {
-				if (channel_it->isOp(client)) {
-					if (mode[0] == '+')
-						channel_it->addMode(mode.substr(1), arg);
-					else if (mode[0] == '-')
-						channel_it->removeMode(mode.substr(1));
-					else
-						throw std::invalid_argument("Invalid mode");
-				}
-				else {
-					throw std::invalid_argument("You are not op in this channel, you can not change its mode");
-				}
-			}
+		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
+		if (channel_it->isOp(client)) {
+			if (mode[0] == '+')
+				channel_it->addMode(mode.substr(1), arg);
+			else if (mode[0] == '-')
+				channel_it->removeMode(mode.substr(1));
+			else
+				throw std::invalid_argument("Invalid mode");
+		}
+		else {
+			throw std::invalid_argument("You are not op in this channel, you can not change its mode");
 		}
 	}
 }
@@ -311,8 +311,7 @@ void Server::changeChannelTopic(std::string input, Client &client) {
 	if (topic.length() > 50)
 		throw std::invalid_argument("Invalid topic");
 	if (utils::checkChannelName(channel) && this->ChannelExists(channel)) {
-		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
-			if (channel_it->getName() == channel) {
+		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
 				if (channel_it->isRestrictedTopic() && !channel_it->isOp(client))
 					throw std::invalid_argument("This channel has a restricted topic, you can not change it");
 				if (topic.empty() && !channel_it->getTopic().empty())
@@ -321,12 +320,10 @@ void Server::changeChannelTopic(std::string input, Client &client) {
 					throw std::invalid_argument("This channel has no topic");
 				if (channel_it->isOp(client))
 					channel_it->setTopic(utils::trimWhitespace(topic));
-			}
 			else {
 				throw std::invalid_argument("You are not op in this channel, you can not change its topic");
 			}
 		}
-	}
 	else {
 		throw std::invalid_argument("Channel does not exist");
 	}
@@ -339,23 +336,16 @@ void Server::kickUserFromChannel(std::string input, Client &client) {
 	std::stringstream ss(input);
 	ss >> nickname;
 	ss >> channel;
-	std::cout << nickname << " " << channel << std::endl;
 	if (utils::checkChannelName(channel) && this->ChannelExists(channel)) { 
-		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++) {
-			if (channel_it->getName() == channel) {
-				if (channel_it->isOp(client)) {
-					for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
-						if (client_it->second.getNickname() == nickname) {
-							sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + " kicked " + nickname + " from " + channel + "\n");
-							channel_it->removeClient(client_it->second);
-						}
-					}
-				}
-				else {
-					throw std::invalid_argument("You are not op in this channel");
+		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
+			if (channel_it->isOp(client)) {
+				std::map<int, Client>::iterator client_it = this->getClient(nickname);
+					sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + " kicked " + nickname + " from " + channel + "\n");
+					channel_it->removeClient(client_it->second);
 				}
 			}
-		}
+	else {
+		throw std::invalid_argument("You are not op in this channel");
 	}
 }
 

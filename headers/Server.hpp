@@ -63,6 +63,9 @@ class Server {
 		void sendMsgToSocket(int client_socket, std::string message);
 		void sendMsgToUsers(std::string message, Client &client);
 
+		std::vector<Channel>::iterator getChannel(std::string channel_name);
+		std::map<int, Client>::iterator getClient(std::string client_name);
+
 		void debug(void);
 };
 
