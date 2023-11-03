@@ -69,16 +69,13 @@ void Server::ProcessNewClient(void) {
 void Server::Run(void) {
 	int max_fd = this->_server_fd;
 
-	while (true)
-	{
+	while (true) {
 		FD_ZERO(&this->_readfds);
 		FD_SET(this->_server_fd, &this->_readfds);
 		// Add client sockets to set
-		for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
-		{
+		for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++) {
 			int client_socket = it->second.getSocket();
-			if (client_socket > 0)
-			{
+			if (client_socket > 0) {
 				FD_SET(client_socket, &this->_readfds);
 				if (client_socket > max_fd)
 					max_fd = client_socket;
@@ -110,7 +107,7 @@ std::vector<Channel>::iterator Server::getChannel(std::string channel_name) {
 			return (it);
 		it++;
 	}
-	return (it);
+	return _channels.end();
 }
 
 std::map<int, Client>::iterator Server::getClient(std::string client_name) {
@@ -120,7 +117,7 @@ std::map<int, Client>::iterator Server::getClient(std::string client_name) {
 			return (it);
 		it++;
 	}
-	return (it);
+	return _clients.end();
 }
 
 void Server::sendMsgToUsers(std::string message, Client &client) {
@@ -220,9 +217,9 @@ void Server::makeUserJoinChannel(std::string channel, Client &client) {
 	}
 	else {
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
-			if (channel_it->getName() == channel) {
-				if (channel_it->addClient(client) == 0)
-					sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " joins " + channel + "\n");
+		if (channel_it->getName() == channel) {
+			if (channel_it->addClient(client) == 0)
+				sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " joins " + channel + "\n");
 		}
 	}
 }
@@ -245,8 +242,7 @@ void Server::makeUserLeaveChannel(std::string channel, Client &client) {
 
 void Server::changeNickname(std::string username, Client &client) {
 	if (utils::checkUserName(username)) {
-		for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
-			if (client_it->second.getNickname() == username)
+		if (this->getClient(username) != this->_clients.end()) {
 				throw std::invalid_argument("Nickname already taken");
 		}
 		sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " changed nickname to " + username + "\n");
@@ -312,18 +308,18 @@ void Server::changeChannelTopic(std::string input, Client &client) {
 		throw std::invalid_argument("Invalid topic");
 	if (utils::checkChannelName(channel) && this->ChannelExists(channel)) {
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
-				if (channel_it->isRestrictedTopic() && !channel_it->isOp(client))
-					throw std::invalid_argument("This channel has a restricted topic, you can not change it");
-				if (topic.empty() && !channel_it->getTopic().empty())
-					sendMsgToSocket(client.getSocket(), channel_it->getTopic() + "\n");
-				else if (topic.empty() && channel_it->getTopic().empty())
-					throw std::invalid_argument("This channel has no topic");
-				if (channel_it->isOp(client))
-					channel_it->setTopic(utils::trimWhitespace(topic));
-			else {
-				throw std::invalid_argument("You are not op in this channel, you can not change its topic");
-			}
+		if (channel_it->isRestrictedTopic() && !channel_it->isOp(client))
+			throw std::invalid_argument("This channel has a restricted topic, you can not change it");
+		if (topic.empty() && !channel_it->getTopic().empty())
+			sendMsgToSocket(client.getSocket(), channel_it->getTopic() + "\n");
+		else if (topic.empty() && channel_it->getTopic().empty())
+			throw std::invalid_argument("This channel has no topic");
+		if (channel_it->isOp(client))
+			channel_it->setTopic(utils::trimWhitespace(topic));
+		else {
+			throw std::invalid_argument("You are not op in this channel, you can not change its topic");
 		}
+	}
 	else {
 		throw std::invalid_argument("Channel does not exist");
 	}
@@ -338,12 +334,12 @@ void Server::kickUserFromChannel(std::string input, Client &client) {
 	ss >> channel;
 	if (utils::checkChannelName(channel) && this->ChannelExists(channel)) { 
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
-			if (channel_it->isOp(client)) {
-				std::map<int, Client>::iterator client_it = this->getClient(nickname);
-					sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + " kicked " + nickname + " from " + channel + "\n");
-					channel_it->removeClient(client_it->second);
-				}
+		if (channel_it->isOp(client)) {
+			std::map<int, Client>::iterator client_it = this->getClient(nickname);
+				sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + " kicked " + nickname + " from " + channel + "\n");
+				channel_it->removeClient(client_it->second);
 			}
+	}
 	else {
 		throw std::invalid_argument("You are not op in this channel");
 	}
