@@ -442,7 +442,6 @@ void Server::CheckActivity(void) {
 				// If the client hasn't entered their password yet, check the received data against the password
 				if (it->second.getPassword() == "") {
 					try {
-						std::cout << "password entered : " << this->_message << std::endl;
 						this->handlePassword(client_socket, it);
 					}
 					catch (std::exception &e) {
@@ -451,13 +450,9 @@ void Server::CheckActivity(void) {
 				}
 				// If the client has entered their password but not their username, set the received data as the username
 				else if (it->second.getNickname() == "") {
-					if (it->second.getIsSic() && this->_message[0] == 'n' && this->_message[1] == ' ')
-						this->_message += 2;
 					this->handleNickname(client_socket, it->second);
 				}
 				else if (it->second.getUsername() == "") {
-					if (it->second.getIsSic() && this->_message[0] == 'u' && this->_message[1] == ' ')
-						this->_message += 2;
 					this->handleUsername(client_socket, it->second);
 				}
 				// If the client has entered both their password and username, handle the received data as a chat message

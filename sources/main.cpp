@@ -2,7 +2,6 @@
 
 int main(int argc, char* argv[])
 {
-	(void)argc;
 	try {
 		utils::ParseArgs(argc, argv);
 	}
