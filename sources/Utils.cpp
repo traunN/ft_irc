@@ -71,7 +71,12 @@ namespace utils {
 	bool checkPassword(std::string providedPassword, std::string _hashedPassword) {
 		std::string pw_hash = hashPassword(providedPassword);
 		if (pw_hash != _hashedPassword)
+		{
+			std::cout << "Wrong password" << std::endl;
+			std::cout << "_hashedPassword: " << _hashedPassword << std::endl;
+			std::cout << "Hashed password: " << pw_hash << std::endl;
 			return false;
+		}
 		return true;
 	}
 }

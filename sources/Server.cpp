@@ -12,7 +12,8 @@ Server::Server(char const *argv1, char const *argv2) {
 		this->_addrlen = sizeof(this->_address);
 		std::stringstream ss(argv1);
 		ss >> this->_port;
-		this->_password = argv2;
+		// this->_password = argv2;
+		this->_password = utils::hashPassword(argv2);
 		try {
 			this->Init();
 		}
@@ -162,7 +163,7 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 		enteredPassword.erase(std::remove_if(enteredPassword.begin(), enteredPassword.end(), ::isspace), enteredPassword.end());
 		std::string storedPassword = this->_password;
 		storedPassword.erase(std::remove_if(storedPassword.begin(), storedPassword.end(), ::isspace), storedPassword.end());
-		if (enteredPassword == storedPassword) {
+		if (utils::checkPassword(enteredPassword, storedPassword)) {
 			// Password is correct, prompt for username
 			this->sendMsgToSocket(client_socket, "Password accepted\n");
 			it->second.setPassword(enteredPassword);
@@ -192,7 +193,7 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 		enteredPassword.erase(std::remove_if(enteredPassword.begin(), enteredPassword.end(), ::isspace), enteredPassword.end());
 		std::string storedPassword = this->_password;
 		storedPassword.erase(std::remove_if(storedPassword.begin(), storedPassword.end(), ::isspace), storedPassword.end());
-		if (enteredPassword == storedPassword) {
+		if (utils::checkPassword(enteredPassword, storedPassword)) {
 			// Password is correct, prompt for username
 			this->sendMsgToSocket(client_socket, "Password accepted\n");
 			it->second.setPassword(enteredPassword);
@@ -201,8 +202,6 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 		}
 		else {
 			this->returnError(client_socket, "Incorrect password");
-			std::cout << "password recieved : " << this->_message << std::endl;
-			std::cout << "password stored : " << this->_password << std::endl;
 			this->sendMsgToSocket(client_socket, "Enter PASS :\n");
 			this->_message = "";
 		}
@@ -411,7 +410,10 @@ void Server::CheckActivity(void) {
 			}
 			else {
 				//remove \n at end of message
-				this->_message.erase(std::remove(this->_message.begin(), this->_message.end(), '\n'), this->_message.end());
+				size_t newlinePos = this->_message.find('\n');
+				if (newlinePos != std::string::npos) {
+					this->_message = this->_message.substr(0, newlinePos);
+				}
 				// if last character isnt \n keep listening for more data and save buffer for later
 				// if (this->_message[valread - 1] != '\n')
 				// {
@@ -428,6 +430,7 @@ void Server::CheckActivity(void) {
 				// If the client hasn't entered their password yet, check the received data against the password
 				if (it->second.getPassword() == "") {
 					try {
+						std::cout << "password entered : " << this->_message << std::endl;
 						this->handlePassword(client_socket, it);
 					}
 					catch (std::exception &e) {
