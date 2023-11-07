@@ -212,7 +212,7 @@ void Server::makeUserJoinChannel(std::string channel, Client &client) {
 	if (!this->ChannelExists(channel) && utils::checkChannelName(channel)) {
 		Channel new_channel(channel, client, "");
 		this->AddChannel(new_channel);
-		sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " joins " + channel + "\n");
+		sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " creates " + channel + "\n");
 	}
 	else {
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
@@ -397,7 +397,14 @@ void Server::CheckActivity(void) {
 			char *buffer = new char[1024];
 			// if there is smthing in buffer join it at start of new buffer
 			valread = recv(client_socket, buffer, 1024, MSG_DONTWAIT);
-			this->_message = buffer;
+			if (this->_temp != "")
+			{
+				std::string temp = this->_temp;
+				this->_temp = "";
+				this->_message = temp + buffer;
+			}
+			else if (this->_temp == "")
+				this->_message = buffer;
 			delete[] buffer;
 			// MAYBE SHOULD STORE BUFFER IN AN STD STRING MESSAGE SO ITS EASIER INSTANTLY
 			if (valread == 0)
@@ -413,6 +420,11 @@ void Server::CheckActivity(void) {
 				size_t newlinePos = this->_message.find('\n');
 				if (newlinePos != std::string::npos) {
 					this->_message = this->_message.substr(0, newlinePos);
+				}
+				else 
+				{
+					this->_temp = this->_message;
+					continue;
 				}
 				// if last character isnt \n keep listening for more data and save buffer for later
 				// if (this->_message[valread - 1] != '\n')
