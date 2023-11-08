@@ -132,18 +132,24 @@ void Server::sendMsgToUsers(std::string message, Client &client) {
 	if (destination[0] == '#') {
 		std::string channel_name = destination;
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel_name);
+		if (channel_it == this->_channels.end())
+			throw std::invalid_argument("Channel does not exist");
 		for (std::map<std::string, Client *>::iterator client_it = channel_it->getClients().begin(); client_it != channel_it->getClients().end(); client_it++) {
 			// cout buffer from client
 			if (!client_it->second->getIsSic() || client_it->second->getSocket() != client.getSocket())
+			{
 				this->sendMsgToSocket(client_it->second->getSocket(), channel_name + "\t <" + client.getNickname() + "> : " + full_message + "\n");
+			}
 		}
 		return ;
 	}
 	else {
 		std::string username = destination;
 		std::map<int, Client>::iterator client_it = this->getClient(username);
+		if (client_it == this->_clients.end())
+			throw std::invalid_argument("User does not exist");
 		this->sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + ": " + message + "\n");
-			return ;
+		return ;
 	}
 }
 
@@ -190,6 +196,7 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 					throw std::invalid_argument("Username already taken");
 					return ;
 				}
+				it->second.setIsSic(true);
 			}
 		}
 		else {
@@ -222,13 +229,13 @@ void Server::makeUserJoinChannel(std::string channel, Client &client) {
 	if (!this->ChannelExists(channel) && utils::checkChannelName(channel)) {
 		Channel new_channel(channel, client, "");
 		this->AddChannel(new_channel);
-		sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " creates " + channel + "\n");
+		std::cout << "User " << client.getNickname() << " creates " << channel << std::endl;
 	}
 	else {
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
 		if (channel_it->getName() == channel) {
 			if (channel_it->addClient(client) == 0)
-				sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " joins " + channel + "\n");
+				std::cout << "User " << client.getNickname() << " joins " << channel << std::endl;
 		}
 	}
 }
@@ -356,17 +363,17 @@ void Server::kickUserFromChannel(std::string input, Client &client) {
 
 void Server::handleNickname(int client_socket, Client &client) {
 	// Check if the username is already taken
+	if (this->_message.length() > 9 || this->_message.length() < 1) {
+		this->returnError(client_socket, "Invalid username lenght");
+		this->sendMsgToSocket(client_socket, "Enter NICK :\n");
+		return ;
+	}
 	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
 		if (client_it->second.getNickname() == this->_message) {
 			this->returnError(client_socket, "Nickname already taken");
 			this->sendMsgToSocket(client_socket, "Enter NICK :\n");
 			return ;
 		}
-	}
-	if (this->_message.length() > 9 || this->_message.length() < 1) {
-		this->returnError(client_socket, "Invalid username lenght");
-		this->sendMsgToSocket(client_socket, "Enter NICK :\n");
-		return ;
 	}
 	// Nickname is valid, set the username and send a welcome message
 	client.setNickname(this->_message);
@@ -376,17 +383,17 @@ void Server::handleNickname(int client_socket, Client &client) {
 
 void Server::handleUsername(int client_socket, Client &client) {
 	// Check if the username is already taken
+	if (this->_message.length() > 9 || this->_message.length() < 1) {
+		this->returnError(client_socket, "Invalid username lenght");
+		this->sendMsgToSocket(client_socket, "Enter USER :\n");
+		return ;
+	}
 	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
 		if (client_it->second.getUsername() == this->_message) {
 			this->returnError(client_socket, "Username already taken");
 			this->sendMsgToSocket(client_socket, "Enter USER :\n");
 			return ;
 		}
-	}
-	if (this->_message.length() > 9 || this->_message.length() < 1) {
-		this->returnError(client_socket, "Invalid username lenght");
-		this->sendMsgToSocket(client_socket, "Enter USER :\n");
-		return ;
 	}
 	client.setUsername(this->_message);
 	this->sendMsgToSocket(client_socket, "Welcome to the chat " + client.getNickname() + "!\n");
@@ -454,7 +461,6 @@ void Server::CheckActivity(void) {
 				}
 				// If the client has entered both their password and username, handle the received data as a chat message
 				else {
-					// if /r /n at the end of buffer remove it
 					it->second.handleMessage(this->_message, *this);
 				}
 			}
@@ -464,6 +470,14 @@ void Server::CheckActivity(void) {
 	for (std::map<int, Client>::iterator it = disconnected_clients.begin(); it != disconnected_clients.end(); it++)
 	{
 		std::cout << "User " << it->second.getNickname() << " disconnected" << std::endl;
+		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++)
+		{
+			if (channel_it->isClientInChannel(it->second))
+			{
+				channel_it->removeClient(it->second);
+				sendMsgToSocket(it->second.getSocket(), "User " + it->second.getNickname() + " leaves " + channel_it->getName() + "\n");
+			}
+		}
 		close(it->first);
 		this->_clients.erase(it->second.getSocket());
 	}
