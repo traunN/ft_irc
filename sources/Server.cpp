@@ -175,15 +175,25 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 				std::string nickname = words[3];
 				nickname.erase(std::remove_if(nickname.begin(), nickname.end(), ::isspace), nickname.end());
 				// while nickname is not set prompt for nickname
-				this->_message = "";
+				// clear message
 				this->_message = nickname;
 				this->handleNickname(client_socket, it->second);
+				if (it->second.getNickname() == "")
+				{
+					throw std::invalid_argument("Nickname already taken");
+					return ;
+				}
+				this->_message = nickname;
 				this->handleUsername(client_socket, it->second);
+				if (it->second.getUsername() == "")
+				{
+					throw std::invalid_argument("Username already taken");
+					return ;
+				}
 			}
 		}
 		else {
 			this->returnError(client_socket, "Incorrect password");
-			this->sendMsgToSocket(client_socket, "Enter PASS :\n");
 			throw std::invalid_argument("Incorrect password");
 		}
 	}
@@ -346,7 +356,6 @@ void Server::kickUserFromChannel(std::string input, Client &client) {
 
 void Server::handleNickname(int client_socket, Client &client) {
 	// Check if the username is already taken
-
 	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
 		if (client_it->second.getNickname() == this->_message) {
 			this->returnError(client_socket, "Nickname already taken");
@@ -419,27 +428,15 @@ void Server::CheckActivity(void) {
 				//remove \n at end of message
 				size_t newlinePos = this->_message.find('\n');
 				if (newlinePos != std::string::npos) {
-					this->_message = this->_message.substr(0, newlinePos);
+					// whats after my new line
+					if (this->_message[newlinePos + 1] != 'N')
+						this->_message = this->_message.substr(0, newlinePos);
 				}
 				else 
 				{
 					this->_temp = this->_message;
 					continue;
 				}
-				// if last character isnt \n keep listening for more data and save buffer for later
-				// if (this->_message[valread - 1] != '\n')
-				// {
-				// 	continue;
-				// }
-				// if (this->_message[valread - 2] == '\r' && this->_message[valread - 1] == '\n')
-				// {
-				// 	it->second.setIsSic(true);
-				// }
-				// else
-				// {
-				// 	it->second.setIsSic(false);
-				// }
-				// If the client hasn't entered their password yet, check the received data against the password
 				if (it->second.getPassword() == "") {
 					try {
 						this->handlePassword(client_socket, it);
@@ -561,18 +558,24 @@ bool Server::ChannelExists(std::string channel_name) {
 
 void	Server::debug()
 {
+	int client_number = 1;
+	std::cout << "##############################" << std::endl;
 	std::cout << "CHANNELS IN SERVER : " << std::endl;
 	for (unsigned int i = 0; i < this->_channels.size(); i++)
 	{
-		std::cout << "Channel " << i << " : " << this->_channels[i].getName() << std::endl;
-		std::cout << "Clients in channel " << i << " : " << std::endl;
+		std::cout << "\t\t -  " << this->_channels[i].getName() << std::endl;
+		std::cout << "Clients in channel " << this->_channels[i].getName() << " : " << std::endl;
 		std::map<std::string, Client *> clients = this->_channels[i].getClients();
 		for (std::map<std::string, Client *>::iterator it = clients.begin(); it != clients.end(); it++)
-			std::cout << it->first << std::endl;
+			std::cout << "\t\t - " << it->first << std::endl;
 	}
 	std::cout << "CLIENTS IN SERVER : " << std::endl;
 	for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
-		std::cout << it->second << std::endl;
+	{
+		std::cout << "\t - Client n." << client_number << " : " << it->second.getNickname() << std::endl;
+		client_number++;
+	}
+	std::cout << "##############################" << std::endl;
 }
 
 std::ostream &operator<<(std::ostream &os, Server &server) {
