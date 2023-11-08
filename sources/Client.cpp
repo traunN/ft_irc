@@ -44,11 +44,7 @@ void Client::parseMessage(std::string message, Server &server) {
 	} else if (command == "KICK") {
 		server.kickUserFromChannel(message, *this);
 	} else if (command == "PRIVMSG") {
-		std::string message;
-		std::string targetUser;
-		iss >> targetUser;
-		std::getline(iss, message);
-		server.sendMsgToUsers(targetUser + message, *this);
+		server.handleMessage(message, *this);
 	} else if (command == "MODE") {
 		server.changeChannelMode(message, *this);
 	} else if (command == "INVITE") {

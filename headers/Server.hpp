@@ -58,10 +58,11 @@ class Server {
 
 		void handleNickname(int client_socket, Client &client);
 		void handleUsername(int client_socket, Client &client);
+		void handleMessage(std::string input, Client &client);
 		void handlePassword(int client_socket, std::map<int, Client>::iterator it);
 		void returnError(int client_socket, std::string error);
 		void sendMsgToSocket(int client_socket, std::string message);
-		void sendMsgToUsers(std::string message, Client &client);
+		void sendMsgToUsers(std::string target, std::string message, Client &client);
 
 		std::vector<Channel>::iterator getChannel(std::string channel_name);
 		std::map<int, Client>::iterator getClient(std::string client_name);
