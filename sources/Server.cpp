@@ -96,7 +96,7 @@ void Server::Run(void) {
 void Server::sendMsgToSocket(int client_socket, std::string message) {
 	int bytes_sent = send(client_socket, message.c_str(), message.length(), 0);
 	if (bytes_sent < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
-		throw std::runtime_error("send error");
+		throw std::runtime_error("send");
 }
 
 // REMEMBER TO PROMPT FOR USERNAME WHEN USER connect
@@ -126,6 +126,8 @@ void Server::sendMsgToUsers(std::string target, std::string message, Client &cli
 	if (target[0] == '#') {
 		std::string channel_name = target;
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel_name);
+		if (channel_it->getName() != channel_name)
+			throw std::invalid_argument("Channel does not exist");
 		for (std::map<std::string, Client *>::iterator client_it = channel_it->getClients().begin(); client_it != channel_it->getClients().end(); client_it++) {
 			// cout buffer from client
 			if (channel_it->isClientInChannel(*client_it->second))
@@ -137,6 +139,8 @@ void Server::sendMsgToUsers(std::string target, std::string message, Client &cli
 	else {
 		std::string username = target;
 		std::map<int, Client>::iterator client_it = this->getClient(username);
+		if (client_it->second.getNickname() != username)
+			throw std::invalid_argument("User does not exist");
 		this->sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + ": " + message + "\n");
 			return ;
 	}
@@ -182,15 +186,26 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 				std::string nickname = words[3];
 				nickname.erase(std::remove_if(nickname.begin(), nickname.end(), ::isspace), nickname.end());
 				// while nickname is not set prompt for nickname
-				this->_message = "";
+				// clear message
 				this->_message = nickname;
 				this->handleNickname(client_socket, it->second);
+				if (it->second.getNickname() == "")
+				{
+					throw std::invalid_argument("Nickname already taken");
+					return ;
+				}
+				this->_message = nickname;
 				this->handleUsername(client_socket, it->second);
+				if (it->second.getUsername() == "")
+				{
+					throw std::invalid_argument("Username already taken");
+					return ;
+				}
+				it->second.setIsSic(true);
 			}
 		}
 		else {
 			this->returnError(client_socket, "Incorrect password");
-			this->sendMsgToSocket(client_socket, "Enter PASS :\n");
 			throw std::invalid_argument("Incorrect password");
 		}
 	}
@@ -219,13 +234,13 @@ void Server::makeUserJoinChannel(std::string channel, Client &client) {
 	if (!this->ChannelExists(channel) && utils::checkChannelName(channel)) {
 		Channel new_channel(channel, client, "");
 		this->AddChannel(new_channel);
-		sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " joins " + channel + "\n");
+		std::cout << "User " << client.getNickname() << " creates " << channel << std::endl;
 	}
 	else {
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
 		if (channel_it->getName() == channel) {
 			if (channel_it->addClient(client) == 0)
-				sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " joins " + channel + "\n");
+				std::cout << "User " << client.getNickname() << " joins " << channel << std::endl;
 		}
 	}
 }
@@ -336,9 +351,8 @@ void Server::kickUserFromChannel(std::string input, Client &client) {
 	std::string nickname;
 
 	std::stringstream ss(input);
-	ss.ignore(5);
-	ss >> channel;
 	ss >> nickname;
+	ss >> channel;
 	if (utils::checkChannelName(channel) && this->ChannelExists(channel)) { 
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
 		if (channel_it->isOp(client)) {
@@ -354,18 +368,17 @@ void Server::kickUserFromChannel(std::string input, Client &client) {
 
 void Server::handleNickname(int client_socket, Client &client) {
 	// Check if the username is already taken
-
+	if (this->_message.length() > 9 || this->_message.length() < 1) {
+		this->returnError(client_socket, "Invalid username lenght");
+		this->sendMsgToSocket(client_socket, "Enter NICK :\n");
+		return ;
+	}
 	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
 		if (client_it->second.getNickname() == this->_message) {
 			this->returnError(client_socket, "Nickname already taken");
 			this->sendMsgToSocket(client_socket, "Enter NICK :\n");
 			return ;
 		}
-	}
-	if (this->_message.length() > 9 || this->_message.length() < 1) {
-		this->returnError(client_socket, "Invalid username lenght");
-		this->sendMsgToSocket(client_socket, "Enter NICK :\n");
-		return ;
 	}
 	// Nickname is valid, set the username and send a welcome message
 	client.setNickname(this->_message);
@@ -375,17 +388,17 @@ void Server::handleNickname(int client_socket, Client &client) {
 
 void Server::handleUsername(int client_socket, Client &client) {
 	// Check if the username is already taken
+	if (this->_message.length() > 9 || this->_message.length() < 1) {
+		this->returnError(client_socket, "Invalid username lenght");
+		this->sendMsgToSocket(client_socket, "Enter USER :\n");
+		return ;
+	}
 	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
 		if (client_it->second.getUsername() == this->_message) {
 			this->returnError(client_socket, "Username already taken");
 			this->sendMsgToSocket(client_socket, "Enter USER :\n");
 			return ;
 		}
-	}
-	if (this->_message.length() > 9 || this->_message.length() < 1) {
-		this->returnError(client_socket, "Invalid username lenght");
-		this->sendMsgToSocket(client_socket, "Enter USER :\n");
-		return ;
 	}
 	client.setUsername(this->_message);
 	this->sendMsgToSocket(client_socket, "Welcome to the chat " + client.getNickname() + "!\n");
@@ -405,7 +418,14 @@ void Server::CheckActivity(void) {
 			char *buffer = new char[1024];
 			// if there is smthing in buffer join it at start of new buffer
 			valread = recv(client_socket, buffer, 1024, MSG_DONTWAIT);
-			this->_message = buffer;
+			if (this->_temp != "")
+			{
+				std::string temp = this->_temp;
+				this->_temp = "";
+				this->_message = temp + buffer;
+			}
+			else if (this->_temp == "")
+				this->_message = buffer;
 			delete[] buffer;
 			// MAYBE SHOULD STORE BUFFER IN AN STD STRING MESSAGE SO ITS EASIER INSTANTLY
 			if (valread == 0)
@@ -420,25 +440,17 @@ void Server::CheckActivity(void) {
 				//remove \n at end of message
 				size_t newlinePos = this->_message.find('\n');
 				if (newlinePos != std::string::npos) {
-					this->_message = this->_message.substr(0, newlinePos);
+					// whats after my new line
+					if (this->_message[newlinePos + 1] != 'N')
+						this->_message = this->_message.substr(0, newlinePos);
 				}
-				// if last character isnt \n keep listening for more data and save buffer for later
-				// if (this->_message[valread - 1] != '\n')
-				// {
-				// 	continue;
-				// }
-				// if (this->_message[valread - 2] == '\r' && this->_message[valread - 1] == '\n')
-				// {
-				// 	it->second.setIsSic(true);
-				// }
-				// else
-				// {
-				// 	it->second.setIsSic(false);
-				// }
-				// If the client hasn't entered their password yet, check the received data against the password
+				else 
+				{
+					this->_temp = this->_message;
+					continue;
+				}
 				if (it->second.getPassword() == "") {
 					try {
-						std::cout << "password entered : " << this->_message << std::endl;
 						this->handlePassword(client_socket, it);
 					}
 					catch (std::exception &e) {
@@ -447,18 +459,13 @@ void Server::CheckActivity(void) {
 				}
 				// If the client has entered their password but not their username, set the received data as the username
 				else if (it->second.getNickname() == "") {
-					if (it->second.getIsSic() && this->_message[0] == 'n' && this->_message[1] == ' ')
-						this->_message += 2;
 					this->handleNickname(client_socket, it->second);
 				}
 				else if (it->second.getUsername() == "") {
-					if (it->second.getIsSic() && this->_message[0] == 'u' && this->_message[1] == ' ')
-						this->_message += 2;
 					this->handleUsername(client_socket, it->second);
 				}
 				// If the client has entered both their password and username, handle the received data as a chat message
 				else {
-					// if /r /n at the end of buffer remove it
 					it->second.handleMessage(this->_message, *this);
 				}
 			}
@@ -468,6 +475,14 @@ void Server::CheckActivity(void) {
 	for (std::map<int, Client>::iterator it = disconnected_clients.begin(); it != disconnected_clients.end(); it++)
 	{
 		std::cout << "User " << it->second.getNickname() << " disconnected" << std::endl;
+		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++)
+		{
+			if (channel_it->isClientInChannel(it->second))
+			{
+				channel_it->removeClient(it->second);
+				sendMsgToSocket(it->second.getSocket(), "User " + it->second.getNickname() + " leaves " + channel_it->getName() + "\n");
+			}
+		}
 		close(it->first);
 		this->_clients.erase(it->second.getSocket());
 	}
@@ -562,18 +577,24 @@ bool Server::ChannelExists(std::string channel_name) {
 
 void	Server::debug()
 {
+	int client_number = 1;
+	std::cout << "##############################" << std::endl;
 	std::cout << "CHANNELS IN SERVER : " << std::endl;
 	for (unsigned int i = 0; i < this->_channels.size(); i++)
 	{
-		std::cout << "Channel " << i << " : " << this->_channels[i].getName() << std::endl;
-		std::cout << "Clients in channel " << i << " : " << std::endl;
+		std::cout << "\t\t -  " << this->_channels[i].getName() << std::endl;
+		std::cout << "Clients in channel " << this->_channels[i].getName() << " : " << std::endl;
 		std::map<std::string, Client *> clients = this->_channels[i].getClients();
 		for (std::map<std::string, Client *>::iterator it = clients.begin(); it != clients.end(); it++)
-			std::cout << it->first << std::endl;
+			std::cout << "\t\t - " << it->first << std::endl;
 	}
 	std::cout << "CLIENTS IN SERVER : " << std::endl;
 	for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
-		std::cout << it->second << std::endl;
+	{
+		std::cout << "\t - Client n." << client_number << " : " << it->second.getNickname() << std::endl;
+		client_number++;
+	}
+	std::cout << "##############################" << std::endl;
 }
 
 std::ostream &operator<<(std::ostream &os, Server &server) {

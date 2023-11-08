@@ -5,6 +5,7 @@ Client::Client(void) {
 
 Client::Client(int socket, std::string nickname, std::string username, std::string password):  _socket(socket), _nickname(nickname), _username(username), _password(password){
 	_operator = false;
+	_is_sic = false;
 }
 
 Client::Client(Client const &src) {
@@ -19,6 +20,8 @@ Client	&Client::operator=(Client const &rhs)
 		this->_username = rhs._username;
 		this->_password = rhs._password;
 		this->_socket = rhs._socket;
+		this->_operator = rhs._operator;
+		this->_is_sic = rhs._is_sic;
 	}
 	return (*this);
 }
