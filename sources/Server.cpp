@@ -240,8 +240,23 @@ void Server::makeUserJoinChannel(std::string channel, Client &client) {
 	else {
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
 		if (channel_it->getName() == channel) {
-			if (channel_it->addClient(client) == 0)
-				sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " joins " + channel + "\n");
+			int op = channel_it->addClient(client);
+			switch (op) {
+				case 0:
+					sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " joins " + channel + "\n");
+					break;
+				case 1:
+					sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " is already in " + channel + "\n");
+					break;
+				case 2:
+					sendMsgToSocket(client.getSocket(), "Channel " + channel + " is full\n");
+					break;
+				case 3:
+					sendMsgToSocket(client.getSocket(), "Channel " + channel + " is invite only\n");
+					break;
+				default:
+					break;
+			}
 		}
 	}
 }

@@ -67,18 +67,12 @@ size_t	Channel::getClientLimit(void) const {
 }
 
 int Channel::addClient(Client &client) {
-	if (isClientInChannel(client)) {
-		std::cout << "Client already in channel" << std::endl;
+	if (isClientInChannel(client))
 		return 1;
-	}
-	else if (this->isFull()) {
-		std::cout << "Channel is full" << std::endl;
-		return 1;
-	}
-	else if (this->invite_only && !isInvited(client)) {
-		std::cout << "Client not invited" << std::endl;
-		return 1;
-	}
+	else if (this->isFull())
+		return 2;
+	else if (this->invite_only && !isInvited(client))
+		return 3;
 	this->_clients.insert(std::pair<std::string, Client *>(client.getUsername(), &client));
 	this->client_count++;
 	return 0;
@@ -163,8 +157,10 @@ void Channel::addMode(std::string mode, std::string arg) {
 		this->has_password = true;
 		this->setPassword(arg);
 	}
-	else if (mode == "l")
+	else if (mode == "l") {
 		this->has_clientlimit = true;
+		this->setClientLimit(utils::stringToInt(arg));
+	}
 	else
 		throw std::runtime_error("Invalid mode, use MODE <#channel> <+/-mode> (i : invite only, t: topic, k: password, o: give/take op, l: client limit)");
 }

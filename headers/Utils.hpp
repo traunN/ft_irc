@@ -10,4 +10,5 @@ namespace utils {
 	std::string 				trimWhitespace(const std::string& str);
 	std::string 				hashPassword(std::string password);
 	bool 						checkPassword(std::string providedPassword, std::string _hashedPassword);
+	int 						stringToInt(std::string str);
 }

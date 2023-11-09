@@ -74,4 +74,11 @@ namespace utils {
 			return false;
 		return true;
 	}
+
+	int stringToInt(std::string str) {
+		int num;
+		std::stringstream ss(str);
+		ss >> num;
+		return num;
+	}
 }
