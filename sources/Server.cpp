@@ -177,7 +177,6 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 		storedPassword.erase(std::remove_if(storedPassword.begin(), storedPassword.end(), ::isspace), storedPassword.end());
 		if (utils::checkPassword(enteredPassword, storedPassword)) {
 			// Password is correct, prompt for username
-			this->sendMsgToSocket(client_socket, "Password accepted\n");
 			it->second.setPassword(enteredPassword);
 			this->sendMsgToSocket(client_socket, "Enter NICK :\n");
 			std::string nick_key = words[2];
@@ -217,8 +216,6 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 		std::string storedPassword = this->_password;
 		storedPassword.erase(std::remove_if(storedPassword.begin(), storedPassword.end(), ::isspace), storedPassword.end());
 		if (utils::checkPassword(enteredPassword, storedPassword)) {
-			// Password is correct, prompt for username
-			this->sendMsgToSocket(client_socket, "Password accepted\n");
 			it->second.setPassword(enteredPassword);
 			this->sendMsgToSocket(client_socket, "Enter NICK :\n");
 			this->_message = "";
@@ -254,7 +251,7 @@ void Server::makeUserJoinChannel(std::string channel, Client &client) {
 	if (!this->ChannelExists(channel) && utils::checkChannelName(channel)) {
 		Channel new_channel(channel, client, "");
 		this->AddChannel(new_channel);
-		sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " creates " + channel + "\n");
+		std::cout << "User " << client.getNickname() << " creates " << channel << std::endl;
 	}
 	else {
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
@@ -269,11 +266,11 @@ void Server::makeUserLeaveChannel(std::string channel, Client &client) {
 	if (this->ChannelExists(channel) && utils::checkChannelName(channel)) {
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
 		if (channel_it->isClientInChannel(client)) {
-			sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " leaves " + channel + "\n");
+			std::cout <<  "User " << client.getNickname() << " leaves " << channel << std::endl;
 			channel_it->removeClient(client);
 		}
 		else {
-			sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " is not in " + channel + "\n");
+			std::cout << "User " << client.getNickname() << " is not in " << channel << std::endl;
 		}
 	}
 	else {
