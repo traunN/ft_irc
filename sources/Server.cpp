@@ -126,7 +126,7 @@ void Server::sendMsgToUsers(std::string target, std::string message, Client &cli
 	if (target[0] == '#') {
 		std::string channel_name = target;
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel_name);
-		if (channel_it->getName() != channel_name)
+		if (channel_it == this->_channels.end())
 			throw std::invalid_argument("Channel does not exist");
 		for (std::map<std::string, Client *>::iterator client_it = channel_it->getClients().begin(); client_it != channel_it->getClients().end(); client_it++) {
 			// cout buffer from client
@@ -139,7 +139,7 @@ void Server::sendMsgToUsers(std::string target, std::string message, Client &cli
 	else {
 		std::string username = target;
 		std::map<int, Client>::iterator client_it = this->getClient(username);
-		if (client_it->second.getNickname() != username)
+		if (client_it == this->_clients.end())
 			throw std::invalid_argument("User does not exist");
 		this->sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + ": " + message + "\n");
 			return ;
