@@ -30,6 +30,7 @@ class Server {
 		void Init(void);
 		void ProcessNewClient(void);
 		void CheckActivity(void);
+		void closeDisconnectedClients(std::map<int, Client> disconnected_clients);
 
 		std::string getName(void);
 		std::string getPassword(void);
