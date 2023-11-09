@@ -136,6 +136,7 @@ void Server::sendMsgToUsers(std::string target, std::string message, Client &cli
 		}
 		return ;
 	}
+	// if its not a channel its a user
 	else {
 		std::string username = target;
 		std::map<int, Client>::iterator client_it = this->getClient(username);
@@ -150,7 +151,7 @@ void Server::handleMessage(std::string input, Client &client) {
 	std::string message;
 	std::string target;
 	std::stringstream ss(input);
-	ss.ignore(8);
+	ss.ignore(8); //we skip the command
 	ss >> target;
 	std::getline(ss, message);
 	if (message.length() > 512)
@@ -276,7 +277,7 @@ void Server::inviteUserToChannel(std::string input, Client &client) {
 	std::string nickname;
 
 	std::stringstream ss(input);
-	ss.ignore(7);
+	ss.ignore(7); //we ignore the command
 	ss >> channel;
 	ss >> nickname;
 	if (!this->ChannelExists(channel))
@@ -305,7 +306,7 @@ void Server::changeChannelMode(std::string input, Client &client) {
 	ss.ignore(5);
 	ss >> channel;
 	ss >> mode;
-	ss >> arg;
+	getline(ss, arg); // we get the rest of the line to send to the addMode function
 	if (!this->ChannelExists(channel))
 		throw std::invalid_argument("Channel does not exist");
 	if (mode.length() < 2 || mode.length() > 3)

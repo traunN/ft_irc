@@ -152,6 +152,7 @@ void Channel::addInvited(std::string username) {
 }
 
 void Channel::addMode(std::string mode, std::string arg) {
+	utils::trimWhitespace(arg);
 	if (mode == "i")
 		this->invite_only = true;
 	else if (mode == "t") {
@@ -164,6 +165,8 @@ void Channel::addMode(std::string mode, std::string arg) {
 	}
 	else if (mode == "l")
 		this->has_clientlimit = true;
+	else
+		throw std::runtime_error("Invalid mode, use [i]nvite, [t]opic, [k]ey or [l]imit as mode");
 }
 
 void Channel::removeMode(std::string mode) {
