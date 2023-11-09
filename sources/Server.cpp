@@ -441,16 +441,14 @@ void Server::CheckActivity(void) {
 	//int client_socket_sender;
 	for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++) {
 		int client_socket = it->second.getSocket();
-		if (FD_ISSET(client_socket, &this->_readfds)) 
-		{
+		if (FD_ISSET(client_socket, &this->_readfds)) {
 			//client_socket_sender = client_socket;
 			// Check if it was for closing, and also read the incoming message
 			int valread;
 			char *buffer = new char[1024];
 			// if there is smthing in buffer join it at start of new buffer
 			valread = recv(client_socket, buffer, 1024, MSG_DONTWAIT);
-			if (this->_temp != "")
-			{
+			if (this->_temp != "") {
 				std::string temp = this->_temp;
 				this->_temp = "";
 				this->_message = temp + buffer;
@@ -475,8 +473,7 @@ void Server::CheckActivity(void) {
 					if (this->_message[newlinePos + 1] != 'N')
 						this->_message = this->_message.substr(0, newlinePos);
 				}
-				else 
-				{
+				else {
 					this->_temp = this->_message;
 					continue;
 				}
@@ -572,10 +569,8 @@ void Server::AddClient(Client client) {
 
 void Server::RemoveChannel(Channel channel) {
 	std::vector<Channel>::iterator it = this->_channels.begin();
-	while (it != this->_channels.end())
-	{
-		if (it->getName() == channel.getName())
-		{
+	while (it != this->_channels.end()) {
+		if (it->getName() == channel.getName()) {
 			this->_channels.erase(it);
 			break;
 		}
@@ -585,10 +580,8 @@ void Server::RemoveChannel(Channel channel) {
 
 void Server::RemoveClient(Client client) {
 	std::map<int, Client>::iterator it = this->_clients.begin();
-	while (it != this->_clients.end())
-	{
-		if (it->second.getNickname() == client.getNickname())
-		{
+	while (it != this->_clients.end()) {
+		if (it->second.getNickname() == client.getNickname()) {
 			this->_clients.erase(it);
 			break;
 		}
@@ -606,13 +599,11 @@ bool Server::ChannelExists(std::string channel_name) {
 	return (false);
 }
 
-void	Server::debug()
-{
+void	Server::debug() {
 	int client_number = 1;
 	std::cout << "##############################" << std::endl;
 	std::cout << "CHANNELS IN SERVER : " << std::endl;
-	for (unsigned int i = 0; i < this->_channels.size(); i++)
-	{
+	for (unsigned int i = 0; i < this->_channels.size(); i++) {
 		std::cout << "\t\t -  " << this->_channels[i].getName() << std::endl;
 		std::cout << "Clients in channel " << this->_channels[i].getName() << " : " << std::endl;
 		std::map<std::string, Client *> clients = this->_channels[i].getClients();
@@ -620,8 +611,7 @@ void	Server::debug()
 			std::cout << "\t\t - " << it->first << std::endl;
 	}
 	std::cout << "CLIENTS IN SERVER : " << std::endl;
-	for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
-	{
+	for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++) {
 		std::cout << "\t - Client n." << client_number << " : " << it->second.getNickname() << std::endl;
 		client_number++;
 	}
