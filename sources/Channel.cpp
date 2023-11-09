@@ -166,7 +166,7 @@ void Channel::addMode(std::string mode, std::string arg) {
 	else if (mode == "l")
 		this->has_clientlimit = true;
 	else
-		throw std::runtime_error("Invalid mode, use [i]nvite, [t]opic, [k]ey or [l]imit as mode");
+		throw std::runtime_error("Invalid mode, use MODE <#channel> <+/-mode> (i : invite only, t: topic, k: password, o: give/take op, l: client limit)");
 }
 
 void Channel::removeMode(std::string mode) {

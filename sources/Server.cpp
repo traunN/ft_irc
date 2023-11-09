@@ -319,7 +319,7 @@ void Server::changeChannelMode(std::string input, Client &client) {
 			else if (mode[0] == '-')
 				channel_it->removeMode(mode.substr(1));
 			else
-				throw std::invalid_argument("Invalid mode");
+				throw std::invalid_argument("Invalid mode, use MODE <#channel> <+/-mode> (i : invite only, t: topic, k: password, o: give/take op, l: client limit)");
 		}
 		else {
 			throw std::invalid_argument("You are not op in this channel, you can not change its mode");
