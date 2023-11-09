@@ -51,9 +51,7 @@ void Client::parseMessage(std::string message, Server &server) {
 	} else if (command == "MODE") {
 		server.changeChannelMode(message, *this);
 	} else if (command == "INVITE") {
-		std::string username;
-		iss >> username;
-		server.inviteUserToChannel(username, *this);
+		server.inviteUserToChannel(message, *this);
 	} else if (command == "TOPIC") {
 		server.changeChannelTopic(message, *this);
 	} else if (command == "DEBUG") {

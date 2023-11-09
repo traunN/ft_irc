@@ -234,13 +234,13 @@ void Server::makeUserJoinChannel(std::string channel, Client &client) {
 	if (!this->ChannelExists(channel) && utils::checkChannelName(channel)) {
 		Channel new_channel(channel, client, "");
 		this->AddChannel(new_channel);
-		std::cout << "User " << client.getNickname() << " creates " << channel << std::endl;
+		sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " creates " + channel + "\n");
 	}
 	else {
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
 		if (channel_it->getName() == channel) {
 			if (channel_it->addClient(client) == 0)
-				std::cout << "User " << client.getNickname() << " joins " << channel << std::endl;
+				sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " joins " + channel + "\n");
 		}
 	}
 }
@@ -276,14 +276,21 @@ void Server::inviteUserToChannel(std::string input, Client &client) {
 	std::string nickname;
 
 	std::stringstream ss(input);
+	ss.ignore(7);
 	ss >> channel;
 	ss >> nickname;
+	if (!this->ChannelExists(channel))
+		throw std::invalid_argument("Channel does not exist");
 	if (nickname.length() > 50)
 		throw std::invalid_argument("Invalid nickname");
 	if (utils::checkChannelName(channel) && this->ChannelExists(channel)) {
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel); 
-		if (channel_it->isOp(client))
+		if (channel_it->isOp(client)) {
 			channel_it->addInvited(nickname);
+			sendMsgToSocket(client.getSocket(), "You invited " + nickname + " to join " + channel + "\n");
+			std::map<int, Client>::iterator client_it = this->getClient(nickname);
+			sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + " invited you to join " + channel + "\n");
+		}
 		else
 			throw std::invalid_argument("You are not op in this channel, you can not invite users");
 	}
@@ -299,6 +306,8 @@ void Server::changeChannelMode(std::string input, Client &client) {
 	ss >> channel;
 	ss >> mode;
 	ss >> arg;
+	if (!this->ChannelExists(channel))
+		throw std::invalid_argument("Channel does not exist");
 	if (mode.length() < 2 || mode.length() > 3)
 		throw std::invalid_argument("Invalid mode, use MODE <#channel> <+/-mode> (i : invite only, t: topic, k: password, o: give/take op, l: client limit)");
 	if (this->ChannelExists(channel) && utils::checkChannelName(channel)) {
@@ -353,6 +362,8 @@ void Server::kickUserFromChannel(std::string input, Client &client) {
 	std::stringstream ss(input);
 	ss >> nickname;
 	ss >> channel;
+	if (!this->ChannelExists(channel))
+		throw std::invalid_argument("Channel does not exist");
 	if (utils::checkChannelName(channel) && this->ChannelExists(channel)) { 
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
 		if (channel_it->isOp(client)) {
