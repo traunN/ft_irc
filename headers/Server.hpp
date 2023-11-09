@@ -63,6 +63,7 @@ class Server {
 		void returnError(int client_socket, std::string error);
 		void sendMsgToSocket(int client_socket, std::string message);
 		void sendMsgToUsers(std::string target, std::string message, Client &client);
+		void notifyChannelJoinStatus(int op, std::string channel, Client &client);
 
 		std::vector<Channel>::iterator getChannel(std::string channel_name);
 		std::map<int, Client>::iterator getClient(std::string client_name);
