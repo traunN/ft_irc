@@ -13,6 +13,8 @@ Channel::Channel(std::string name, Client &creator, std::string password) {
 	this->client_count = 0;
 	this->addClient(creator);
 	this->addOp(creator);
+	this->_topic = "";
+	this->_mode = "";
 }
 
 Channel::~Channel(void) {
