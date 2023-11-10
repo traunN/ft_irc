@@ -383,17 +383,24 @@ void Server::kickUserFromChannel(std::string input, Client &client) {
 	std::string nickname;
 
 	std::stringstream ss(input);
-	ss >> nickname;
+	ss.ignore(5);
 	ss >> channel;
+	ss >> nickname;
 	if (!this->ChannelExists(channel))
 		throw std::invalid_argument("Channel does not exist");
 	if (utils::checkChannelName(channel) && this->ChannelExists(channel)) { 
+		if (!this->getChannel(channel)->isClientInChannel(client))
+			throw std::invalid_argument("You are not in this channel");
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
 		if (channel_it->isOp(client)) {
 			std::map<int, Client>::iterator client_it = this->getClient(nickname);
-				sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + " kicked " + nickname + " from " + channel + "\n");
-				channel_it->removeClient(client_it->second);
-			}
+			if (client_it == this->_clients.end())
+				throw std::invalid_argument("User does not exist");
+			if (!channel_it->isClientInChannel(client_it->second))
+				throw std::invalid_argument("User is not in this channel");
+			sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + " kicked " + nickname + " from " + channel + "\n");
+			channel_it->removeClient(client_it->second);
+		}
 	}
 	else {
 		throw std::invalid_argument("You are not op in this channel");
