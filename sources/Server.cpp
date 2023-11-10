@@ -305,7 +305,9 @@ void Server::inviteUserToChannel(std::string input, Client &client) {
 	if (nickname.length() > 50)
 		throw std::invalid_argument("Invalid nickname");
 	if (utils::checkChannelName(channel) && this->ChannelExists(channel)) {
-		std::vector<Channel>::iterator channel_it = this->getChannel(channel); 
+		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
+		if (!channel_it->isClientInChannel(client))
+			throw std::invalid_argument("You are not in this channel");
 		if (channel_it->isOp(client)) {
 			channel_it->addInvited(nickname);
 			sendMsgToSocket(client.getSocket(), "You invited " + nickname + " to join " + channel + "\n");
