@@ -128,6 +128,8 @@ void Server::sendMsgToUsers(std::string target, std::string message, Client &cli
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel_name);
 		if (channel_it == this->_channels.end())
 			throw std::invalid_argument("Channel does not exist");
+		if (!channel_it->isClientInChannel(client))
+			throw std::invalid_argument("You are not in this channel");
 		for (std::map<std::string, Client *>::iterator client_it = channel_it->getClients().begin(); client_it != channel_it->getClients().end(); client_it++) {
 			// cout buffer from client
 			if (channel_it->isClientInChannel(*client_it->second))
@@ -612,7 +614,7 @@ void	Server::debug() {
 		std::cout << "Clients in channel " << this->_channels[i].getName() << " : " << std::endl;
 		std::map<std::string, Client *> clients = this->_channels[i].getClients();
 		for (std::map<std::string, Client *>::iterator it = clients.begin(); it != clients.end(); it++)
-			std::cout << "\t\t - " << it->first << std::endl;
+			std::cout << "\t\t - " << it->second->getNickname() << std::endl;
 	}
 	std::cout << "CLIENTS IN SERVER : " << std::endl;
 	for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++) {
