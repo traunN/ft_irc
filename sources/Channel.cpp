@@ -68,6 +68,12 @@ size_t	Channel::getClientLimit(void) const {
 	return (this->client_limit);
 }
 
+Client	*Channel::getClient(std::string nickname) {
+	if (this->_clients.find(nickname) == this->_clients.end())
+		throw std::runtime_error("Client not found");
+	return (this->_clients[nickname]);
+}
+
 int Channel::addClient(Client &client) {
 	if (isClientInChannel(client))
 		return 1;
@@ -147,35 +153,55 @@ void Channel::addInvited(std::string username) {
 	this->invited_clients.insert(username);
 }
 
-void Channel::addMode(std::string mode, std::string arg) {
+int Channel::addMode(std::string mode, std::string arg) {
 	utils::trimWhitespace(arg);
-	if (mode == "i")
+	if (mode == "i") {
 		this->invite_only = true;
+		return 0;
+	}
 	else if (mode == "t") {
 		this->restrict_topic = true;
-		this->setTopic(arg);
+		return 1;
 	}
 	else if (mode == "k") {
 		this->has_password = true;
-		this->setPassword(arg);
+		return 2;
 	}
 	else if (mode == "l") {
 		this->has_clientlimit = true;
 		this->setClientLimit(utils::stringToInt(arg));
+		return 3;
+	}
+	else if (mode == "o") {
+		std::cout << "arg:" << arg << std::endl;
+		this->addOp(*getClient(arg));
+		return 4;
 	}
 	else
 		throw std::runtime_error("Invalid mode, use MODE <#channel> <+/-mode> (i : invite only, t: topic, k: password, o: give/take op, l: client limit)");
+	return -1;
 }
 
-void Channel::removeMode(std::string mode) {
-	if (mode == "i")
+int Channel::removeMode(std::string mode) {
+	if (mode == "i") {
 		this->invite_only = false;
-	else if (mode == "t")
+		return 0;
+	}
+	else if (mode == "t") {
 		this->restrict_topic = false;
-	else if (mode == "k")
+		return 1;
+	}
+	else if (mode == "k") {
 		this->has_password = false;
-	else if (mode == "l")
+		return 2;
+	}
+	else if (mode == "l") {
 		this->has_clientlimit = false;
+		return 3;
+	}
+	else
+		throw std::runtime_error("Invalid mode, use MODE <#channel> <+/-mode> (i : invite only, t: topic, k: password, o: give/take op, l: client limit)");
+	return -1;
 }
 
 std::ostream&	operator<<(std::ostream& os, Channel& channel) {

@@ -319,15 +319,39 @@ void Server::inviteUserToChannel(std::string input, Client &client) {
 	}
 }
 
+void Server::notifyChannelModeStatus(int op, std::string channel, Client &client) {
+	switch (op) {
+		case 0:
+			sendMsgToSocket(client.getSocket(), "Mode invite only for " + channel + " set\n");
+			break;
+		case 1:
+			sendMsgToSocket(client.getSocket(), "Mode topic for " + channel + " set\n");
+			break;
+		case 2:
+			sendMsgToSocket(client.getSocket(), "Mode password for " + channel + " set\n");
+			break;
+		case 3:
+			sendMsgToSocket(client.getSocket(), "Mode client limit for " + channel + " set\n");
+			break;
+		case 4:
+			sendMsgToSocket(client.getSocket(), "Mode op for " + channel + " set\n");
+			break;
+		default:
+			break;
+	}
+}
+
 void Server::changeChannelMode(std::string input, Client &client) {
 	std::string channel;
 	std::string mode;
 	std::string arg;
+	int op = -1;
 
 	std::stringstream ss(input);
 	ss.ignore(5);
 	ss >> channel;
 	ss >> mode;
+	ss.ignore(1);
 	getline(ss, arg); // we get the rest of the line to send to the addMode function
 	if (!this->ChannelExists(channel))
 		throw std::invalid_argument("Channel does not exist");
@@ -337,9 +361,9 @@ void Server::changeChannelMode(std::string input, Client &client) {
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
 		if (channel_it->isOp(client)) {
 			if (mode[0] == '+')
-				channel_it->addMode(mode.substr(1), arg);
+				op = channel_it->addMode(mode.substr(1), arg);
 			else if (mode[0] == '-')
-				channel_it->removeMode(mode.substr(1));
+				op = channel_it->removeMode(mode.substr(1));
 			else
 				throw std::invalid_argument("Invalid mode, use MODE <#channel> <+/-mode> (i : invite only, t: topic, k: password, o: give/take op, l: client limit)");
 		}
@@ -347,6 +371,8 @@ void Server::changeChannelMode(std::string input, Client &client) {
 			throw std::invalid_argument("You are not op in this channel, you can not change its mode");
 		}
 	}
+	if (op != -1)
+		notifyChannelModeStatus(op, channel, client);
 }
 
 void Server::changeChannelTopic(std::string input, Client &client) {
@@ -363,10 +389,10 @@ void Server::changeChannelTopic(std::string input, Client &client) {
 		if (!this->getChannel(channel)->isClientInChannel(client))
 			throw std::invalid_argument("You are not in this channel");
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
-		if (channel_it->isRestrictedTopic() && !channel_it->isOp(client))
-			throw std::invalid_argument("This channel has a restricted topic, you can not change it");
-		else if (!channel_it->getTopic().empty() && topic.empty())
+		if (!channel_it->getTopic().empty() && topic.empty())
 			sendMsgToSocket(client.getSocket(), channel_it->getTopic() + "\n");
+		else if (channel_it->isRestrictedTopic() && !channel_it->isOp(client))
+			throw std::invalid_argument("This channel has a restricted topic, you can not change it");
 		else if (channel_it->getTopic().empty() && topic.empty())
 			throw std::invalid_argument("This channel has no topic");
 		else if (topic.empty())

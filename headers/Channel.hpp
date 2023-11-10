@@ -40,9 +40,10 @@ class Channel {
 		std::string const	&getModes(void) const;
 		std::map<std::string, Client *> &getClients(void);
 		size_t				getClientLimit(void) const;
+		Client				*getClient(std::string nickname);
 
-		void 				addMode(std::string mode, std::string arg);
-		void 				removeMode(std::string mode);
+		int 				addMode(std::string mode, std::string arg);
+		int 				removeMode(std::string mode);
 		int 				addClient(Client &client);
 		void 				removeClient(Client &client);
 		void 				addOp(Client &client);
