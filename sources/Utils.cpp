@@ -18,6 +18,8 @@ namespace utils {
 	bool checkChannelName(std::string channel) {
 		if (channel.length() > 50)
 			throw std::length_error("Channel name too long");
+		else if (channel.length() < 2)
+			throw std::length_error("Channel name too short");
 		else if (channel[0] != '#')
 			throw std::invalid_argument("Channel name must start with #");
 		return true;

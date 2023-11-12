@@ -48,6 +48,10 @@ std::string const	&Channel::getName(void) const {
 	return (this->_name);
 }
 
+std::string const	&Channel::getPassword(void) const {
+	return (this->_password);
+}
+
 std::string const	&Channel::getTopic(void) const {
 	return (this->_topic);
 }
@@ -165,6 +169,7 @@ int Channel::addMode(std::string mode, std::string arg) {
 	}
 	else if (mode == "k") {
 		this->has_password = true;
+		this->setPassword(arg);
 		return 2;
 	}
 	else if (mode == "l") {

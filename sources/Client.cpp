@@ -33,9 +33,7 @@ void Client::parseMessage(std::string message, Server &server) {
 	iss >> command;
 
 	if (command == "JOIN") {
-		std::string channel;
-		iss >> channel;
-		server.makeUserJoinChannel(channel, *this);
+		server.makeUserJoinChannel(message, *this);
 	} else if (command == "PART") {
 		std::string channel;
 		iss >> channel;

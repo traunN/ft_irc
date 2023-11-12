@@ -251,7 +251,14 @@ void Server::notifyChannelJoinStatus(int op, std::string channel, Client &client
 	}
 }
 
-void Server::makeUserJoinChannel(std::string channel, Client &client) {
+void Server::makeUserJoinChannel(std::string message, Client &client) {
+	std::string channel;
+	std::string password;
+	std::stringstream ss(message);
+
+	ss.ignore(5); //we ignore the command
+	ss >> channel;
+	ss >> password;
 	if (!this->ChannelExists(channel) && utils::checkChannelName(channel)) {
 		Channel new_channel(channel, client, "");
 		this->AddChannel(new_channel);
@@ -260,6 +267,10 @@ void Server::makeUserJoinChannel(std::string channel, Client &client) {
 	else {
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
 		if (channel_it->getName() == channel) {
+			std::cout << "password: " << password << std::endl;
+			std::cout << "chan pw:" << channel_it->getPassword() << std::endl;
+			if (channel_it->hasPassword() && channel_it->getPassword() != password)
+				throw std::invalid_argument("Invalid password");
 			int op = channel_it->addClient(client);
 			notifyChannelJoinStatus(op, channel, client);
 		}
@@ -319,7 +330,29 @@ void Server::inviteUserToChannel(std::string input, Client &client) {
 	}
 }
 
-void Server::notifyChannelModeStatus(int op, std::string channel, Client &client) {
+void Server::notifyChannelRemoveModeStatus(int op, std::string channel, Client &client) {
+	switch (op) {
+		case 0:
+			sendMsgToSocket(client.getSocket(), "Mode invite only for " + channel + " unset\n");
+			break;
+		case 1:
+			sendMsgToSocket(client.getSocket(), "Mode topic for " + channel + " unset\n");
+			break;
+		case 2:
+			sendMsgToSocket(client.getSocket(), "Mode password for " + channel + " unset\n");
+			break;
+		case 3:
+			sendMsgToSocket(client.getSocket(), "Mode client limit for " + channel + " unset\n");
+			break;
+		case 4:
+			sendMsgToSocket(client.getSocket(), "Mode op for " + channel + " unset\n");
+			break;
+		default:
+			break;
+	}
+}
+
+void Server::notifyChannelAddModeStatus(int op, std::string channel, Client &client) {
 	switch (op) {
 		case 0:
 			sendMsgToSocket(client.getSocket(), "Mode invite only for " + channel + " set\n");
@@ -371,8 +404,12 @@ void Server::changeChannelMode(std::string input, Client &client) {
 			throw std::invalid_argument("You are not op in this channel, you can not change its mode");
 		}
 	}
-	if (op != -1)
-		notifyChannelModeStatus(op, channel, client);
+	if (op != -1) {
+		if (mode[0] == '+')
+			notifyChannelAddModeStatus(op, channel, client);
+		else if (mode[0] == '-')
+			notifyChannelRemoveModeStatus(op, channel, client);
+	}
 }
 
 void Server::changeChannelTopic(std::string input, Client &client) {
