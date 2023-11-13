@@ -493,7 +493,7 @@ void Server::handleNickname(int client_socket, Client &client) {
 void Server::handleUsername(int client_socket, Client &client) {
 	// Check if the username is already taken
 	if (this->_message.length() > 9 || this->_message.length() < 1) {
-		sendMsgToSocket(client_socket, "Invalid username lenght");
+		sendMsgToSocket(client_socket, "Invalid username lenght\n");
 		sendMsgToSocket(client_socket, "Enter USER :\n");
 		return ;
 	}
