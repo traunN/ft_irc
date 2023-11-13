@@ -61,7 +61,7 @@ void Server::ProcessNewClient(void) {
 	if (fcntl(new_socket, F_SETFL, flags | O_NONBLOCK) == -1)
 		throw std::runtime_error("fcntl");
 	// Send welcome message
-	this->sendMsgToSocket(new_socket, "Enter PASS :\n");
+	this->sendMsgToSocket(new_socket, "Enter PASS :");
 	// Add the new client to the map with an empty username and password
 	Client client(new_socket, "", "", "");
 	this->_clients.insert(std::pair<int, Client>(new_socket, client));
@@ -94,6 +94,7 @@ void Server::Run(void) {
 }
 
 void Server::sendMsgToSocket(int client_socket, std::string message) {
+	message = message + "\n";
 	int bytes_sent = send(client_socket, message.c_str(), message.length(), 0);
 	if (bytes_sent < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
 		throw std::runtime_error("send");
@@ -134,7 +135,7 @@ void Server::sendMsgToUsers(std::string target, std::string message, Client &cli
 			// cout buffer from client
 			if (channel_it->isClientInChannel(*client_it->second))
 				if (!client_it->second->getIsSic() || client_it->second->getSocket() != client.getSocket())
-					sendMsgToSocket(client_it->second->getSocket(), channel_name + "\t <" + client.getNickname() + "> : " + message + "\n");
+					sendMsgToSocket(client_it->second->getSocket(), channel_name + "\t <" + client.getNickname() + "> : " + message);
 		}
 		return ;
 	}
@@ -144,7 +145,7 @@ void Server::sendMsgToUsers(std::string target, std::string message, Client &cli
 		std::map<int, Client>::iterator client_it = this->getClient(username);
 		if (client_it == this->_clients.end())
 			throw std::invalid_argument("User does not exist");
-		this->sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + ": " + message + "\n");
+		this->sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + ": " + message);
 			return ;
 	}
 }
@@ -176,10 +177,10 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 		if (utils::checkPassword(enteredPassword, storedPassword)) {
 			// Password is correct, prompt for username
 			it->second.setPassword(enteredPassword);
-			sendMsgToSocket(client_socket, "Enter NICK :\n");
+			sendMsgToSocket(client_socket, "Enter NICK");
 			std::string nick_key = words[2];
 			nick_key.erase(std::remove_if(nick_key.begin(), nick_key.end(), ::isspace), nick_key.end());
-			if (nick_key == "NICK")	
+			if (nick_key == "NICK")
 			{
 				std::string nickname = words[3];
 				nickname.erase(std::remove_if(nickname.begin(), nickname.end(), ::isspace), nickname.end());
@@ -215,12 +216,12 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 		storedPassword.erase(std::remove_if(storedPassword.begin(), storedPassword.end(), ::isspace), storedPassword.end());
 		if (utils::checkPassword(enteredPassword, storedPassword)) {
 			it->second.setPassword(enteredPassword);
-			sendMsgToSocket(client_socket, "Enter NICK :\n");
+			sendMsgToSocket(client_socket, "Enter NICK :");
 			this->_message = "";
 		}
 		else {
 			sendMsgToSocket(client_socket, "Incorrect password");
-			sendMsgToSocket(client_socket, "Enter PASS :\n");
+			sendMsgToSocket(client_socket, "Enter PASS :");
 			this->_message = "";
 		}
 	}
@@ -229,18 +230,18 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 void Server::notifyChannelJoinStatus(int op, std::string channel, Client &client) {
 	switch (op) {
 		case 0:
-			sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " joins " + channel + "\n");
+			sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " joins " + channel);
 			if (this->getChannel(channel)->getTopic() != "")
-				sendMsgToSocket(client.getSocket(), "Channel topic: " + this->getChannel(channel)->getTopic() + "\n");
+				sendMsgToSocket(client.getSocket(), "Channel topic: " + this->getChannel(channel)->getTopic());
 			break;
 		case 1:
-			sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " is already in " + channel + "\n");
+			sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " is already in " + channel);
 			break;
 		case 2:
-			sendMsgToSocket(client.getSocket(), "Channel " + channel + " is full\n");
+			sendMsgToSocket(client.getSocket(), "Channel " + channel + " is full");
 			break;
 		case 3:
-			sendMsgToSocket(client.getSocket(), "Channel " + channel + " is invite only\n");
+			sendMsgToSocket(client.getSocket(), "Channel " + channel + " is invite only");
 			break;
 		default:
 			break;
@@ -258,7 +259,7 @@ void Server::makeUserJoinChannel(std::string message, Client &client) {
 	if (!this->ChannelExists(channel) && utils::checkChannelName(channel)) {
 		Channel new_channel(channel, client, "");
 		this->AddChannel(new_channel);
-		sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " creates " + channel + "\n");
+		sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " creates " + channel);
 	}
 	else {
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
@@ -275,11 +276,11 @@ void Server::makeUserLeaveChannel(std::string channel, Client &client) {
 	if (this->ChannelExists(channel) && utils::checkChannelName(channel)) {
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
 		if (channel_it->isClientInChannel(client)) {
-			sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " leaves " + channel + "\n");
+			sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " leaves " + channel);
 			channel_it->removeClient(client);
 		}
 		else {
-			sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " is not in " + channel + "\n");
+			sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " is not in " + channel);
 		}
 	}
 	else {
@@ -292,7 +293,7 @@ void Server::changeNickname(std::string username, Client &client) {
 		if (this->getClient(username) != this->_clients.end()) {
 				throw std::invalid_argument("Nickname already taken");
 		}
-		sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " changed nickname to " + username + "\n");
+		sendMsgToSocket(client.getSocket(), "User " + client.getNickname() + " changed nickname to " + username);
 		client.setNickname(username);
 	}
 }
@@ -315,9 +316,9 @@ void Server::inviteUserToChannel(std::string input, Client &client) {
 			throw std::invalid_argument("You are not in this channel");
 		if (channel_it->isOp(client)) {
 			channel_it->addInvited(nickname);
-			sendMsgToSocket(client.getSocket(), "You invited " + nickname + " to join " + channel + "\n");
+			sendMsgToSocket(client.getSocket(), "You invited " + nickname + " to join " + channel);
 			std::map<int, Client>::iterator client_it = this->getClient(nickname);
-			sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + " invited you to join " + channel + "\n");
+			sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + " invited you to join " + channel);
 		}
 		else
 			throw std::invalid_argument("You are not op in this channel, you can not invite users");
@@ -327,19 +328,19 @@ void Server::inviteUserToChannel(std::string input, Client &client) {
 void Server::notifyChannelRemoveModeStatus(int op, std::string channel, Client &client) {
 	switch (op) {
 		case 0:
-			sendMsgToSocket(client.getSocket(), "Mode invite only for " + channel + " unset\n");
+			sendMsgToSocket(client.getSocket(), "Mode invite only for " + channel + " unset");
 			break;
 		case 1:
-			sendMsgToSocket(client.getSocket(), "Mode topic for " + channel + " unset\n");
+			sendMsgToSocket(client.getSocket(), "Mode topic for " + channel + " unset");
 			break;
 		case 2:
-			sendMsgToSocket(client.getSocket(), "Mode password for " + channel + " unset\n");
+			sendMsgToSocket(client.getSocket(), "Mode password for " + channel + " unset");
 			break;
 		case 3:
-			sendMsgToSocket(client.getSocket(), "Mode client limit for " + channel + " unset\n");
+			sendMsgToSocket(client.getSocket(), "Mode client limit for " + channel + " unset");
 			break;
 		case 4:
-			sendMsgToSocket(client.getSocket(), "Mode op for " + channel + " unset\n");
+			sendMsgToSocket(client.getSocket(), "Mode op for " + channel + " unset");
 			break;
 		default:
 			break;
@@ -349,19 +350,19 @@ void Server::notifyChannelRemoveModeStatus(int op, std::string channel, Client &
 void Server::notifyChannelAddModeStatus(int op, std::string channel, Client &client) {
 	switch (op) {
 		case 0:
-			sendMsgToSocket(client.getSocket(), "Mode invite only for " + channel + " set\n");
+			sendMsgToSocket(client.getSocket(), "Mode invite only for " + channel + " set");
 			break;
 		case 1:
-			sendMsgToSocket(client.getSocket(), "Mode topic for " + channel + " set\n");
+			sendMsgToSocket(client.getSocket(), "Mode topic for " + channel + " set");
 			break;
 		case 2:
-			sendMsgToSocket(client.getSocket(), "Mode password for " + channel + " set\n");
+			sendMsgToSocket(client.getSocket(), "Mode password for " + channel + " set");
 			break;
 		case 3:
-			sendMsgToSocket(client.getSocket(), "Mode client limit for " + channel + " set\n");
+			sendMsgToSocket(client.getSocket(), "Mode client limit for " + channel + " set");
 			break;
 		case 4:
-			sendMsgToSocket(client.getSocket(), "Mode op for " + channel + " set\n");
+			sendMsgToSocket(client.getSocket(), "Mode op for " + channel + " set");
 			break;
 		default:
 			break;
@@ -423,7 +424,7 @@ void Server::changeChannelTopic(std::string input, Client &client) {
 			throw std::invalid_argument("You are not in this channel");
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
 		if (!channel_it->getTopic().empty() && topic.empty())
-			sendMsgToSocket(client.getSocket(), channel_it->getTopic() + "\n");
+			sendMsgToSocket(client.getSocket(), channel_it->getTopic());
 		else if (channel_it->isRestrictedTopic() && !channel_it->isOp(client))
 			throw std::invalid_argument("This channel has a restricted topic, you can not change it");
 		else if (channel_it->getTopic().empty() && topic.empty())
@@ -461,7 +462,7 @@ void Server::kickUserFromChannel(std::string input, Client &client) {
 				throw std::invalid_argument("User does not exist");
 			if (!channel_it->isClientInChannel(client_it->second))
 				throw std::invalid_argument("User is not in this channel");
-			sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + " kicked you from " + channel + "\n");
+			sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + " kicked you from " + channel);
 			channel_it->removeClient(client_it->second);
 		}
 	}
@@ -473,39 +474,39 @@ void Server::kickUserFromChannel(std::string input, Client &client) {
 void Server::handleNickname(int client_socket, Client &client) {
 	// Check if the username is already taken
 	if (this->_message.length() > 9 || this->_message.length() < 1) {
-		sendMsgToSocket(client_socket, "Invalid username lenght\n");
-		sendMsgToSocket(client_socket, "Enter NICK :\n");
+		sendMsgToSocket(client_socket, "Invalid username lenght");
+		sendMsgToSocket(client_socket, "Enter NICK :");
 		return ;
 	}
 	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
 		if (client_it->second.getNickname() == this->_message) {
 			sendMsgToSocket(client_socket, "Nickname already taken");
-			sendMsgToSocket(client_socket, "Enter NICK :\n");
+			sendMsgToSocket(client_socket, "Enter NICK :");
 			return ;
 		}
 	}
 	// Nickname is valid, set the username and send a welcome message
 	client.setNickname(this->_message);
 	// Ask for a username
-	sendMsgToSocket(client_socket, "Enter USER :\n");
+	sendMsgToSocket(client_socket, "Enter USER :");
 }
 
 void Server::handleUsername(int client_socket, Client &client) {
 	// Check if the username is already taken
 	if (this->_message.length() > 9 || this->_message.length() < 1) {
-		sendMsgToSocket(client_socket, "Invalid username lenght\n");
-		sendMsgToSocket(client_socket, "Enter USER :\n");
+		sendMsgToSocket(client_socket, "Invalid username lenght");
+		sendMsgToSocket(client_socket, "Enter USER :");
 		return ;
 	}
 	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
 		if (client_it->second.getUsername() == this->_message) {
 			sendMsgToSocket(client_socket, "Username already taken");
-			sendMsgToSocket(client_socket, "Enter USER :\n");
+			sendMsgToSocket(client_socket, "Enter USER :");
 			return ;
 		}
 	}
 	client.setUsername(this->_message);
-	sendMsgToSocket(client_socket, "Welcome to the chat " + client.getNickname() + "!\n");
+	sendMsgToSocket(client_socket, "Welcome to the chat " + client.getNickname() + "!");
 	std::cout << "New client " << client.getNickname() << " connected" << std::endl;
 }
 
@@ -584,7 +585,7 @@ void Server::closeDisconnectedClients(std::map<int, Client> disconnected_clients
 			if (channel_it->isClientInChannel(it->second))
 			{
 				channel_it->removeClient(it->second);
-				sendMsgToSocket(it->second.getSocket(), "User " + it->second.getNickname() + " leaves " + channel_it->getName() + "\n");
+				sendMsgToSocket(it->second.getSocket(), "User " + it->second.getNickname() + " leaves " + channel_it->getName());
 			}
 		}
 		close(it->first);
