@@ -37,6 +37,8 @@ CXXFLAGS = -Wall -Wextra -Werror -g -std=c++98
 
 INCLUDES = -I headers/
 
+BONUSINCLUDES = -I bonus/
+
 # **************************************************************************** #
 
 all: $(NAME)
@@ -45,7 +47,7 @@ $(OBJDIR)%.o: $(SRCDIR)%.cpp
 	@$(CXX) $(INCLUDES) -c $< -o $@
 
 $(BONUSOBJDIR)%.o: $(BONUSDIR)%.cpp
-	@$(CXX) $(INCLUDES) -c $< -o $@
+	@$(CXX) $(BONUSINCLUDES) -c $< -o $@
 
 $(NAME): $(OBJ)
 	@$(CXX) $^ -o $@ -lssl -lcrypto
