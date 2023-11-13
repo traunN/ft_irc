@@ -41,7 +41,7 @@ void Channel::setClientLimit(size_t limit) {
 }
 
 void Channel::setPassword(std::string password) {
-	this->_password = password;
+	this->_password = utils::hashPassword(password);
 }
 
 std::string const	&Channel::getName(void) const {

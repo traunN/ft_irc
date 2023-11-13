@@ -1,5 +1,6 @@
 #include "Utils.hpp"
 #include <openssl/sha.h>
+#include <regex.h>
 
 namespace utils {
 	void	ParseArgs(int argc, char **argv) {
