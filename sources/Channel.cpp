@@ -9,7 +9,7 @@ Channel::Channel(std::string name, Client &creator, std::string password) {
 	this->restrict_topic = false;
 	this->has_password = false;
 	this->has_clientlimit = false;
-	this->client_limit = 100;
+	this->client_limit = 1024;
 	this->client_count = 0;
 	this->addClient(creator);
 	this->addOp(creator);
@@ -148,7 +148,9 @@ bool Channel::isClientInChannel(Client &client) const {
 }
 
 bool Channel::isFull(void) const {
-	if (this->client_count >= this->client_limit)
+	if (!this->hasClientLimit())
+		return false;
+	else if (this->client_count >= this->client_limit)
 		return true;
 	return false;
 }

@@ -84,4 +84,12 @@ namespace utils {
 		ss >> num;
 		return num;
 	}
+
+	bool checkModeArg(std::string mode, std::string arg) {
+		if (mode == "+k" && arg.empty())
+			return false;
+		else if (mode == "+l" && arg.empty())
+			return false;
+		return true;
+	}
 }

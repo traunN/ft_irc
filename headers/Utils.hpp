@@ -11,4 +11,5 @@ namespace utils {
 	std::string 				hashPassword(std::string password);
 	bool 						checkPassword(std::string providedPassword, std::string _hashedPassword);
 	int 						stringToInt(std::string str);
+	bool checkModeArg(std::string mode, std::string arg);
 }

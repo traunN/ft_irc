@@ -68,7 +68,7 @@ void Client::handleMessage(std::string message, Server &server) {
 	}
 	catch (std::exception &e) {
 		// returnError needs to be a method in the Server class
-		server.returnError(this->getSocket(), e.what());
+		server.sendMsgToSocket(this->getSocket(), e.what());
 	}
 }
 

@@ -384,6 +384,8 @@ void Server::changeChannelMode(std::string input, Client &client) {
 		throw std::invalid_argument("Channel does not exist");
 	if (mode.length() < 2 || mode.length() > 3)
 		throw std::invalid_argument("Invalid mode, use MODE <#channel> <+/-mode> (i : invite only, t: topic, k: password, o: give/take op, l: client limit)");
+	if (utils::checkModeArg(mode, arg) == false)
+		throw std::invalid_argument("Invalid mode argument");
 	if (this->ChannelExists(channel) && utils::checkChannelName(channel)) {
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel);
 		if (channel_it->isOp(client)) {
@@ -457,7 +459,7 @@ void Server::kickUserFromChannel(std::string input, Client &client) {
 				throw std::invalid_argument("User does not exist");
 			if (!channel_it->isClientInChannel(client_it->second))
 				throw std::invalid_argument("User is not in this channel");
-			sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + " kicked " + nickname + " from " + channel + "\n");
+			sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + " kicked you from " + channel + "\n");
 			channel_it->removeClient(client_it->second);
 		}
 	}
