@@ -577,7 +577,7 @@ void Server::CheckActivity(void) {
 }
 
 void Server::closeDisconnectedClients(std::map<int, Client> disconnected_clients) {
-		for (std::map<int, Client>::iterator it = disconnected_clients.begin(); it != disconnected_clients.end(); it++) {
+	for (std::map<int, Client>::iterator it = disconnected_clients.begin(); it != disconnected_clients.end(); it++) {
 		std::cout << "User " << it->second.getNickname() << " disconnected" << std::endl;
 		for (std::vector<Channel>::iterator channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++)
 		{
