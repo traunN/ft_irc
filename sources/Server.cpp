@@ -459,7 +459,7 @@ void Server::kickUserFromChannel(std::string input, Client &client) {
 		if (channel_it->isOp(client)) {
 			std::map<int, Client>::iterator client_it = this->getClient(nickname);
 			if (client_it == this->_clients.end())
-				throw std::invalid_argument("User does not exist");
+				throw std::invalid_argument("User does not existe");
 			if (!channel_it->isClientInChannel(client_it->second))
 				throw std::invalid_argument("User is not in this channel");
 			sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + " kicked you from " + channel);
