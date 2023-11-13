@@ -449,6 +449,8 @@ void Server::kickUserFromChannel(std::string input, Client &client) {
 	ss >> nickname;
 	if (!this->ChannelExists(channel))
 		throw std::invalid_argument("Channel does not exist");
+	if (nickname == client.getNickname())
+		throw std::invalid_argument("You can not kick yourself");
 	if (utils::checkChannelName(channel) && this->ChannelExists(channel)) { 
 		if (!this->getChannel(channel)->isClientInChannel(client))
 			throw std::invalid_argument("You are not in this channel");
