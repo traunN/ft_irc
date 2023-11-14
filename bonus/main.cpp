@@ -10,8 +10,9 @@ int main(int argc, char *argv[]) {
 		return (1);
 	}
 	try {
-		Bot bot(argv[1], argv[2], argv[3]);
-		bot.run();
+		Bot bot(argv[1], argv[3]);
+		bot.ParseArgs(argc, argv);
+		bot.Run();
 	}
 	catch (std::exception &e) {
 		std::cerr << e.what() << std::endl;

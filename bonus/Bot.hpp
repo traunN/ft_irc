@@ -35,10 +35,11 @@ class Bot {
 	private:
 		int _socket;
 		std::string _host;
-		std::string _port;
+		int			_port;
 		std::string _password;
 	public:
-		Bot(std::string host, std::string port, std::string password);
+		Bot(std::string host, std::string password);
 		~Bot(void);
-		void run(void);
+		void Run(void);
+		void ParseArgs(int argc, char **argv);
 };
