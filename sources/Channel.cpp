@@ -1,5 +1,5 @@
-#include "Channel.hpp"
-#include "Client.hpp"
+#include "../headers/Channel.hpp"
+#include "../headers/Client.hpp"
 
 Channel::Channel(std::string name, Client &creator, std::string password) {
 	this->_name = name;

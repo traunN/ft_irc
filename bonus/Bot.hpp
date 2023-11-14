@@ -21,6 +21,16 @@
 #include <ctime>
 #include <errno.h>
 
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+
+
+namespace utils {
+	
+}
+
 class Bot {
 	private:
 		int _socket;

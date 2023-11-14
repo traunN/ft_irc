@@ -1,4 +1,4 @@
-#include "Server.hpp"
+#include "../headers/Server.hpp"
 
 Server::Server(char const *argv1, char const *argv2) {
 	this->_server_fd = 0;

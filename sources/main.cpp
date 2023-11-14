@@ -1,4 +1,4 @@
-#include "Main.hpp"
+#include "../headers/Main.hpp"
 
 int main(int argc, char* argv[])
 {
