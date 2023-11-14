@@ -24,17 +24,7 @@ void Bot::run(void) {
 	if (connect(this->_socket, (struct sockaddr*)&myaddr, sizeof(myaddr))) {
 		throw std::runtime_error("connect() failed");
 	}
-	std::cout << "Connecting to " << this->_host << ":" << this->_port << std::endl;
-	// std::string pass = "PASS 1\r\n";
-	// std::string nick = "NICK bot\r\n";
-	// std::string user = "USER bot\r\n";
-	// usleep(500);
-	// send(this->_socket, pass.c_str(), pass.length(), 0);
-	// usleep(500);
-	// send(this->_socket, nick.c_str(), nick.length(), 0);
-	// usleep(500);
-	// send(this->_socket, user.c_str(), user.length(), 0);
-	// usleep(500);
+	std::cout << "Connected to server " << this->_host << ":" << this->_port << std::endl;
 	while (1) {
 		continue;
 	}
