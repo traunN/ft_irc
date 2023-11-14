@@ -13,6 +13,7 @@ class Client
 		std::string _password;
 		bool	_operator;
 		bool	_is_sic;
+		bool	_is_bot;
 	public:
 		Client(void);
 		Client(int socket, std::string nickname, std::string username, std::string password);
@@ -32,6 +33,8 @@ class Client
 		bool	getIsSic(void);
 		void	setOperator(bool op);
 		void	setIsSic(bool is_sic);
+		bool	getIsBot(void);
+		void	setIsBot(bool is_bot);
 
 		void	handleMessage(std::string message, Server &server);
 		void	parseMessage(std::string message, Server &server);

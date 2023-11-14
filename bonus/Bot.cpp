@@ -25,8 +25,10 @@ void Bot::Run(void) {
 		throw std::runtime_error("connect() failed");
 	}
 	std::cout << "Connected to server " << this->_host << ":" << this->_port << std::endl;
+	// create specific msg to send to server so it can read it like : this->_message[0] == 'B' && this->_message[1] == 'O' && this->_message[2] == 'T' && this->_message[3] == '\0'
+	send(this->_socket, "BOT", 4, 0);
 	while (1) {
-		
+
 		continue;
 	}
 }

@@ -65,6 +65,7 @@ void Server::ProcessNewClient(void) {
 	// Add the new client to the map with an empty username and password
 	Client client(new_socket, "", "", "");
 	this->_clients.insert(std::pair<int, Client>(new_socket, client));
+	// print client info
 }
 
 void Server::Run(void) {
@@ -540,6 +541,12 @@ void Server::CheckActivity(void) {
 					disconnected_clients.insert(std::pair<int, Client>(client_socket, it->second));
 			}
 			else {
+				// check if user is a bot
+				if (this->_message[0] == 'B' && this->_message[1] == 'O' && this->_message[2] == 'T' && this->_message[3] == '\0')
+				{
+					it->second.setIsBot(true);
+					std::cout << "Bot connected" << std::endl;
+				}
 				//remove \n at end of message
 				size_t newlinePos = this->_message.find('\n');
 				if (newlinePos != std::string::npos) {

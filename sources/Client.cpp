@@ -6,6 +6,7 @@ Client::Client(void) {
 Client::Client(int socket, std::string nickname, std::string username, std::string password):  _socket(socket), _nickname(nickname), _username(username), _password(password){
 	_operator = false;
 	_is_sic = false;
+	_is_bot = false;
 }
 
 Client::Client(Client const &src) {
@@ -22,6 +23,7 @@ Client	&Client::operator=(Client const &rhs)
 		this->_socket = rhs._socket;
 		this->_operator = rhs._operator;
 		this->_is_sic = rhs._is_sic;
+		this->_is_bot = rhs._is_bot;
 	}
 	return (*this);
 }
@@ -112,12 +114,20 @@ bool	Client::getIsSic(void) {
 	return (this->_is_sic);
 }
 
+bool	Client::getIsBot(void) {
+	return (this->_is_bot);
+}
+
 void	Client::setOperator(bool op) {
 	this->_operator = op;
 }
 
 void	Client::setIsSic(bool is_sic) {
 	this->_is_sic = is_sic;
+}
+
+void	Client::setIsBot(bool is_bot) {
+	this->_is_bot = is_bot;
 }
 
 std::ostream&	operator<<(std::ostream& os, Client& client) {
