@@ -160,6 +160,25 @@ void Server::handleMessage(std::string input, Client &client) {
 	std::getline(ss, message);
 	if (message.length() > 512)
 		throw std::invalid_argument("Message too long");
+	if (message.length() < 1)
+		throw std::invalid_argument("Message too short");
+	// if client is sic
+	if (client.getIsSic())
+	{
+		message = message.substr(2);
+		size_t newlinePos = message.find('\r');
+		if (newlinePos != std::string::npos)
+		{
+			message = message.substr(0, newlinePos);
+		}
+		if (message == "")
+			return ;
+	}
+	else
+	{
+		message = message.substr(1);
+	}
+	std::cout << "Message from " << client.getNickname() << " to " << target << ": " << message << std::endl;
 	sendMsgToUsers(target, message, client);
 }
 
@@ -575,6 +594,7 @@ void Server::CheckActivity(void) {
 				}
 				// If the client has entered both their password and username, handle the received data as a chat message
 				else {
+					//if user is sic make message as if its not sic
 					it->second.handleMessage(this->_message, *this);
 				}
 			}
