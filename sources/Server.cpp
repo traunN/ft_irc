@@ -683,6 +683,14 @@ bool Server::ChannelExists(std::string channel_name) {
 	return (false);
 }
 
+bool Server::isBotConnected(void) {
+	for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++) {
+		if (it->second.getIsBot())
+			return (true);
+	}
+	return (false);
+}
+
 void	Server::debug() {
 	int client_number = 1;
 	std::cout << "##############################" << std::endl;

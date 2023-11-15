@@ -48,6 +48,7 @@ class Server {
 		void RemoveClient(Client client);
 
 		bool ChannelExists(std::string channel_name);
+		bool isBotConnected(void);
 
 		void makeUserJoinChannel(std::string channel,Client &client);
 		void makeUserLeaveChannel(std::string channel, Client &client);
