@@ -162,7 +162,6 @@ void Server::handleMessage(std::string input, Client &client) {
 		throw std::invalid_argument("Message too long");
 	if (message.length() < 1)
 		throw std::invalid_argument("Message too short");
-	// if client is sic
 	if (client.getIsSic())
 	{
 		message = message.substr(2);
@@ -178,7 +177,6 @@ void Server::handleMessage(std::string input, Client &client) {
 	{
 		message = message.substr(1);
 	}
-	std::cout << "Message from " << client.getNickname() << " to " << target << ": " << message << std::endl;
 	sendMsgToUsers(target, message, client);
 }
 
