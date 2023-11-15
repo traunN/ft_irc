@@ -135,8 +135,16 @@ void Server::sendMsgToUsers(std::string target, std::string message, Client &cli
 		for (std::map<std::string, Client *>::iterator client_it = channel_it->getClients().begin(); client_it != channel_it->getClients().end(); client_it++) {
 			// cout buffer from client
 			if (channel_it->isClientInChannel(*client_it->second))
-				if (!client_it->second->getIsSic() || client_it->second->getSocket() != client.getSocket())
+			{
+				if (!client_it->second->getIsSic())
+				{
 					sendMsgToSocket(client_it->second->getSocket(), channel_name + "\t <" + client.getNickname() + "> : " + message);
+				}
+				else if (client_it->second->getSocket() != client.getSocket())
+				{
+					sendMsgToSocket(client_it->second->getSocket(), "PRIVMSG " + channel_name + " :<" + client_it->second->getNickname() + ">: " + message);
+				}
+			}
 		}
 		return ;
 	}
@@ -166,6 +174,12 @@ void Server::handleMessage(std::string input, Client &client) {
 	{
 		message = message.substr(2);
 		size_t newlinePos = message.find('\r');
+		if (newlinePos != std::string::npos)
+		{
+			message = message.substr(0, newlinePos);
+		}
+		// remove \n too
+		newlinePos = message.find('\n');
 		if (newlinePos != std::string::npos)
 		{
 			message = message.substr(0, newlinePos);
@@ -592,7 +606,6 @@ void Server::CheckActivity(void) {
 				}
 				// If the client has entered both their password and username, handle the received data as a chat message
 				else {
-					//if user is sic make message as if its not sic
 					it->second.handleMessage(this->_message, *this);
 				}
 			}
@@ -667,6 +680,14 @@ void Server::AddChannel(Channel channel) {
 
 void Server::AddClient(Client client) {
 	this->_clients.insert(std::pair<int, Client>(client.getSocket(), client));
+}
+
+Client *Server::getClientBySocket(int socket) {
+	for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++) {
+		if (it->second.getSocket() == socket)
+			return (&it->second);
+	}
+	return (NULL);
 }
 
 void Server::RemoveChannel(Channel channel) {

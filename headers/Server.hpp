@@ -70,6 +70,7 @@ class Server {
 		void notifyChannelRemoveModeStatus(int op, std::string channel, Client &client);
 		std::vector<Channel>::iterator getChannel(std::string channel_name);
 		std::map<int, Client>::iterator getClient(std::string client_name);
+		Client *getClientBySocket(int socket);
 
 		void debug(void);
 };
