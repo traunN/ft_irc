@@ -51,7 +51,6 @@ bool Server::isServerRunning(int port) {
 }
 
 void Server::ProcessNewClient(void) {
-	// Use select for non blocking
 	int new_socket;
 	if ((new_socket = accept(this->_server_fd, (struct sockaddr *)&this->_address, (socklen_t *)&this->_addrlen)) < 0)
 		throw std::runtime_error("accept");
@@ -60,12 +59,9 @@ void Server::ProcessNewClient(void) {
 		throw std::runtime_error("fcntl");
 	if (fcntl(new_socket, F_SETFL, flags | O_NONBLOCK) == -1)
 		throw std::runtime_error("fcntl");
-	// Send welcome message
 	this->sendMsgToSocket(new_socket, "Enter PASS :");
-	// Add the new client to the map with an empty username and password
 	Client client(new_socket, "", "", "");
 	this->_clients.insert(std::pair<int, Client>(new_socket, client));
-	// print client info
 }
 
 void Server::Run(void) {
@@ -74,7 +70,6 @@ void Server::Run(void) {
 	while (true) {
 		FD_ZERO(&this->_readfds);
 		FD_SET(this->_server_fd, &this->_readfds);
-		// Add client sockets to set
 		for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++) {
 			int client_socket = it->second.getSocket();
 			if (client_socket > 0) {
@@ -83,10 +78,8 @@ void Server::Run(void) {
 					max_fd = client_socket;
 			}
 		}
-		// Use select to monitor file descriptors for activity
 		if (select(max_fd + 1, &this->_readfds, NULL, NULL, NULL) < 0)
 			throw std::runtime_error("select");
-		// If something happened on the master socket, then its an incoming connection
 		if (FD_ISSET(this->_server_fd, &this->_readfds))
 			this->ProcessNewClient();
 		else
@@ -131,7 +124,6 @@ void Server::sendMsgToClients(std::string target, std::string message, Client &c
 		if (!channel_it->isClientInChannel(client))
 			throw std::invalid_argument("You are not in this channel");
 		for (std::map<std::string, Client *>::iterator client_it = channel_it->getClients().begin(); client_it != channel_it->getClients().end(); client_it++) {
-			// cout buffer from client
 			if (channel_it->isClientInChannel(*client_it->second))
 			{
 				if (!client_it->second->getIsSic())
@@ -146,7 +138,6 @@ void Server::sendMsgToClients(std::string target, std::string message, Client &c
 		}
 		return ;
 	}
-	// if its not a channel its a client
 	else {
 		std::string username = target;
 		std::map<int, Client>::iterator client_it = this->getClient(username);
@@ -161,7 +152,7 @@ void Server::handleMessage(std::string input, Client &client) {
 	std::string message;
 	std::string target;
 	std::stringstream ss(input);
-	ss.ignore(8); //we skip the command
+	ss.ignore(8);
 	ss >> target;
 	std::getline(ss, message);
 	if (message.length() > 512)
@@ -205,7 +196,6 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 		std::string storedPassword = this->_password;
 		storedPassword.erase(std::remove_if(storedPassword.begin(), storedPassword.end(), ::isspace), storedPassword.end());
 		if (utils::checkPassword(enteredPassword, storedPassword)) {
-			// Password is correct, prompt for username
 			it->second.setPassword(enteredPassword);
 			sendMsgToSocket(client_socket, "Enter NICK");
 			std::string nick_key = words[2];
@@ -214,8 +204,6 @@ void Server::handlePassword(int client_socket, std::map<int, Client>::iterator i
 			{
 				std::string nickname = words[3];
 				nickname.erase(std::remove_if(nickname.begin(), nickname.end(), ::isspace), nickname.end());
-				// while nickname is not set prompt for nickname
-				// clear message
 				this->_message = nickname;
 				this->handleNickname(client_socket, it->second);
 				if (it->second.getNickname() == "")
