@@ -192,8 +192,6 @@ void Server::handleMessage(std::string input, Client &client) {
 	sendMsgToClients(target, message, client);
 }
 
-//test comment
-
 void Server::handlePassword(int client_socket, std::map<int, Client>::iterator it) {
 	std::vector <std::string> delimiters;
 	delimiters.push_back(" ");
