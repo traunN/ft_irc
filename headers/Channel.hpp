@@ -24,7 +24,6 @@ class Channel {
 		size_t client_limit;
 		size_t client_count;
 	public:
-		//Channel(std::string name, Client &creator, Password &password);
 		Channel(std::string name, Client &creator, std::string password);
 		virtual ~Channel(void);
 

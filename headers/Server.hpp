@@ -23,7 +23,6 @@ class Server {
 		fd_set _readfds;
 	public:
 		Server(char const *argv1, char const *argv2);
-		// Server(std::string name, std::string password);
 		virtual ~Server(void);
 
 		void Run(void);
@@ -50,12 +49,12 @@ class Server {
 		bool ChannelExists(std::string channel_name);
 		bool isBotConnected(void);
 
-		void makeUserJoinChannel(std::string channel,Client &client);
-		void makeUserLeaveChannel(std::string channel, Client &client);
+		void makeClientJoinChannel(std::string channel,Client &client);
+		void makeClientLeaveChannel(std::string channel, Client &client);
 		void changeNickname(std::string nickname, Client &client);
-		void kickUserFromChannel(std::string nickname, Client &client);
+		void kickClientFromChannel(std::string nickname, Client &client);
 		void changeChannelMode(std::string input, Client &client);
-		void inviteUserToChannel(std::string input, Client &client);
+		void inviteClientToChannel(std::string input, Client &client);
 		void changeChannelTopic(std::string input, Client &client);
 
 		void handleNickname(int client_socket, Client &client);
@@ -64,15 +63,13 @@ class Server {
 		void handlePassword(int client_socket, std::map<int, Client>::iterator it);
 		void returnError(int client_socket, std::string error);
 		void sendMsgToSocket(int client_socket, std::string message);
-		void sendMsgToUsers(std::string target, std::string message, Client &client);
+		void sendMsgToClients(std::string target, std::string message, Client &client);
 		void notifyChannelJoinStatus(int op, std::string channel, Client &client);
 		void notifyChannelAddModeStatus(int op, std::string channel, Client &client);
 		void notifyChannelRemoveModeStatus(int op, std::string channel, Client &client);
 		std::vector<Channel>::iterator getChannel(std::string channel_name);
 		std::map<int, Client>::iterator getClient(std::string client_name);
 		Client *getClientBySocket(int socket);
-
-		void debug(void);
 };
 
 std::ostream&	operator<<(std::ostream& os, Server& server);

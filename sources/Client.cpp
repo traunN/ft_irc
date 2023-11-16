@@ -35,27 +35,25 @@ void Client::parseMessage(std::string message, Server &server) {
 	iss >> command;
 
 	if (command == "JOIN") {
-		server.makeUserJoinChannel(message, *this);
+		server.makeClientJoinChannel(message, *this);
 	} else if (command == "PART") {
 		std::string channel;
 		iss >> channel;
-		server.makeUserLeaveChannel(channel, *this);
+		server.makeClientLeaveChannel(channel, *this);
 	} else if (command == "NICK") {
 		std::string nickname;
 		iss >> nickname;
 		server.changeNickname(nickname, *this);
 	} else if (command == "KICK") {
-		server.kickUserFromChannel(message, *this);
+		server.kickClientFromChannel(message, *this);
 	} else if (command == "PRIVMSG") {
 		server.handleMessage(message, *this);
 	} else if (command == "MODE") {
 		server.changeChannelMode(message, *this);
 	} else if (command == "INVITE") {
-		server.inviteUserToChannel(message, *this);
+		server.inviteClientToChannel(message, *this);
 	} else if (command == "TOPIC") {
 		server.changeChannelTopic(message, *this);
-	} else if (command == "DEBUG") {
-		server.debug();
 	} else {
 		throw std::runtime_error("Invalid command");
 	}
@@ -65,11 +63,9 @@ void Client::parseMessage(std::string message, Server &server) {
 void Client::handleMessage(std::string message, Server &server) {
 	std::map<int, Client> clients = server.getClients();
 	try {
-		// parseMessage needs to be a method in the Client or Server class or a global function
 		this->parseMessage(message, server);
 	}
 	catch (std::exception &e) {
-		// returnError needs to be a method in the Server class
 		server.sendMsgToSocket(this->getSocket(), e.what());
 	}
 }

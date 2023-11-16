@@ -12,7 +12,7 @@ namespace utils {
 		if (port < 194 || port > 9999)
 			throw std::invalid_argument("Invalid port number");
 		std::string password = argv[2];
-		if (password.length() < 1 /*do we check for strong password or not?*/)
+		if (password.length() < 1)
 			throw std::length_error("Invalid password length");
 	}
 	
