@@ -148,9 +148,12 @@ void Server::sendMsgToClients(std::string target, std::string message, Client &c
 			this->sendMsgToSocket(client_it->second.getSocket(), message);
 			_awaitingBot.insert(_awaitingBot.begin(), client);
 		}
-		else {
+		else if (!client_it->second.getIsSic()){
 			this->sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + ": " + message);
-		
+		}
+		else if (client_it->second.getSocket() != client.getSocket())
+		{
+			this->sendMsgToSocket(client_it->second.getSocket(), "PRIVMSG " + client_it->second.getNickname() + " :<" + client.getNickname() + ">: " + message);
 		}
 		return ;
 	}
