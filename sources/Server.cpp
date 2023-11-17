@@ -55,10 +55,7 @@ void Server::ProcessNewClient(void) {
 	int new_socket;
 	if ((new_socket = accept(this->_server_fd, (struct sockaddr *)&this->_address, (socklen_t *)&this->_addrlen)) < 0)
 		throw std::runtime_error("accept");
-	int flags = fcntl(new_socket, F_GETFL, 0);
-	if (flags == -1)
-		throw std::runtime_error("fcntl");
-	if (fcntl(new_socket, F_SETFL, flags | O_NONBLOCK) == -1)
+	if (fcntl(new_socket, F_SETFL, O_NONBLOCK) == -1)
 		throw std::runtime_error("fcntl");
 	this->sendMsgToSocket(new_socket, "Enter PASS :");
 	Client client(new_socket, "", "", "");
@@ -133,7 +130,7 @@ void Server::sendMsgToClients(std::string target, std::string message, Client &c
 				}
 				else if (client_it->second->getSocket() != client.getSocket())
 				{
-					sendMsgToSocket(client_it->second->getSocket(), "PRIVMSG " + channel_name + " :<" + client_it->second->getNickname() + ">: " + message);
+					sendMsgToSocket(client_it->second->getSocket(), "PRIVMSG " + channel_name + " :<" + client.getNickname() + ">: " + message);
 				}
 			}
 		}
@@ -581,10 +578,14 @@ void Server::CheckActivity(void) {
 				size_t newlinePos = this->_message.find('\n');
 				if (newlinePos != std::string::npos) {
 					if (this->_message[newlinePos + 1] != 'N')
+					{
 						this->_message = this->_message.substr(0, newlinePos);
+					}
 				}
 				else {
-					this->_temp = this->_message;
+					// this->_message -1 character
+					this->_temp = this->_message.substr(0, this->_message.length() - 2);
+					std::cout << "temp: " << this->_temp << std::endl;
 					continue;
 				}
 				if (it->second.getPassword() == "") {
@@ -629,10 +630,7 @@ void Server::closeDisconnectedClients(std::map<int, Client> disconnected_clients
 void Server::Init(void) {
 	if ((this->_server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 		throw std::runtime_error("socket failed");
-	int flags = fcntl(this->_server_fd, F_GETFL, 0);
-	if (flags == -1)
-		throw std::runtime_error("fcntl");
-	if (fcntl(this->_server_fd, F_SETFL, flags | O_NONBLOCK) == -1)
+	if (fcntl(this->_server_fd, F_SETFL, O_NONBLOCK) == -1)
 		throw std::runtime_error("fcntl");
 	if (setsockopt(this->_server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &_opt, sizeof(_opt)))
 		throw std::runtime_error("setsockopt");
