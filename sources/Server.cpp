@@ -491,9 +491,9 @@ void Server::kickClientFromChannel(std::string input, Client &client) {
 			sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + " kicked you from " + channel);
 			channel_it->removeClient(client_it->second);
 		}
-	}
-	else {
-		throw std::invalid_argument("You are not op in this channel");
+		else {
+			throw std::invalid_argument("You are not op in this channel");
+		}
 	}
 }
 
@@ -553,13 +553,8 @@ void Server::CheckActivity(void) {
 			else if (this->_temp == "")
 				this->_message = buffer;
 			delete[] buffer;
-			if (valread == 0)
+			if (valread <= 0) {
 				disconnected_clients.insert(std::pair<int, Client>(client_socket, it->second));
-			else if (valread < 0) {
-				if (errno != EAGAIN && errno != EWOULDBLOCK)
-					continue;
-				else
-					disconnected_clients.insert(std::pair<int, Client>(client_socket, it->second));
 			}
 			else {
 				if (this->_message[0] == 'B' && this->_message[1] == 'O' && this->_message[2] == 'T' && this->_message[3] == '\0')
@@ -585,7 +580,6 @@ void Server::CheckActivity(void) {
 				else {
 					// this->_message -1 character
 					this->_temp = this->_message.substr(0, this->_message.length() - 2);
-					std::cout << "temp: " << this->_temp << std::endl;
 					continue;
 				}
 				if (it->second.getPassword() == "") {
