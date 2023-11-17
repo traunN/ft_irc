@@ -1,4 +1,7 @@
 #include "Bot.hpp"
+#include <ctime>
+#include <sstream>
+#include <string>
 
 Bot::Bot(std::string host, std::string password) {
 	this->_host = host;
@@ -27,9 +30,22 @@ void Bot::Run(void) {
 	std::cout << "Connected to server " << this->_host << ":" << this->_port << std::endl;
 	// create specific msg to send to server so it can read it like : this->_message[0] == 'B' && this->_message[1] == 'O' && this->_message[2] == 'T' && this->_message[3] == '\0'
 	send(this->_socket, "BOT", 4, 0);
+	int valread;
+	std::string message;
 	while (1) {
-
-		continue;
+		char* buffer = new char[1024];
+		valread = recv(this->_socket, buffer, 1024, MSG_DONTWAIT);
+		if (valread > 0) {
+			message = buffer;
+		 	std::istringstream iss(message);
+			std::string command;
+			iss >> command;
+			if (command == "TIMER") {
+				std::string str = getTime();
+				send(this->_socket, str.c_str(), str.length(), 0);
+			}
+		}
+		delete [] buffer;
 	}
 }
 
@@ -43,4 +59,15 @@ void	Bot::ParseArgs(int argc, char **argv) {
 	std::string password = argv[3];
 	if (password.length() < 1 /*do we check for strong password or not?*/)
 		throw std::length_error("Invalid password length");
+}
+
+std::string Bot::getTime(void) {
+	time_t rawtime;
+	struct tm * timeinfo;
+	char buffer[80];
+	time (&rawtime);
+	timeinfo = localtime(&rawtime);
+	strftime(buffer,sizeof(buffer),"Today's date is %d-%m-%Y and current time is %H:%M:%S",timeinfo);
+	std::string str(buffer);
+	return str;
 }

@@ -26,11 +26,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-
-namespace utils {
-	
-}
-
 class Bot {
 	private:
 		int _socket;
@@ -42,4 +37,6 @@ class Bot {
 		~Bot(void);
 		void Run(void);
 		void ParseArgs(int argc, char **argv);
+		std::string getTime(void);
+		
 };

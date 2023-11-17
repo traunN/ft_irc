@@ -8,6 +8,7 @@ Server::Server(char const *argv1, char const *argv2) {
 	if (!this->isServerRunning(atoi(argv1))) {
 		this->_channels = std::vector<Channel>();
 		this->_clients = std::map<int, Client>();
+		this->_awaitingBot = std::vector<Client>();
 		this->_opt = 1;
 		this->_addrlen = sizeof(this->_address);
 		std::stringstream ss(argv1);
@@ -143,8 +144,15 @@ void Server::sendMsgToClients(std::string target, std::string message, Client &c
 		std::map<int, Client>::iterator client_it = this->getClient(username);
 		if (client_it == this->_clients.end())
 			throw std::invalid_argument("Client does not exist");
-		this->sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + ": " + message);
-			return ;
+		if (client_it->second.getNickname() == "BOT" && client_it->second.getIsBot()) {
+			this->sendMsgToSocket(client_it->second.getSocket(), message);
+			_awaitingBot.insert(_awaitingBot.begin(), client);
+		}
+		else {
+			this->sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + ": " + message);
+		
+		}
+		return ;
 	}
 }
 
@@ -495,6 +503,11 @@ void Server::handleNickname(int client_socket, Client &client) {
 		sendMsgToSocket(client_socket, "Enter NICK :");
 		return ;
 	}
+	if (this->_message == "BOT") {
+		sendMsgToSocket(client_socket, "You can't name yourself BOT");
+		sendMsgToSocket(client_socket, "Enter NICK :");
+		return ;
+	}
 	for (std::map<int, Client>::iterator client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++) {
 		if (client_it->second.getNickname() == this->_message) {
 			sendMsgToSocket(client_socket, "Nickname already taken");
@@ -553,6 +566,14 @@ void Server::CheckActivity(void) {
 				{
 					it->second.setIsBot(true);
 					std::cout << "Bot connected" << std::endl;
+				}
+				if (it->second.getIsBot()) {
+					it->second.setNickname("BOT");
+					if (!_awaitingBot.empty()) {
+						sendMsgToSocket(_awaitingBot[0].getSocket(), this->_message);
+						_awaitingBot.erase(_awaitingBot.begin());
+					}
+					continue;
 				}
 				size_t newlinePos = this->_message.find('\n');
 				if (newlinePos != std::string::npos) {

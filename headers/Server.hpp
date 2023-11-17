@@ -20,6 +20,7 @@ class Server {
 		std::string _password;
 		std::vector<Channel> _channels;
 		std::map<int, Client> _clients;
+		std::vector<Client> _awaitingBot;
 		fd_set _readfds;
 	public:
 		Server(char const *argv1, char const *argv2);
