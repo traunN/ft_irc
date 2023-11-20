@@ -61,6 +61,7 @@ void Bot::Run(void) {
 					std::string userMove = args;
 					std::string botMove = getRPSMove();
 					std::string result = getRPSResult(userMove, botMove);
+					std::cout << "Result: " << result << std::endl;
 					send(this->_socket, result.c_str(), result.length(), 0);
 				}
 				else {
@@ -139,7 +140,7 @@ std::string Bot::getRPSResult(std::string userMove, std::string botMove) {
 	else
 		result = "ERROR";
 
-	return ("Result[" + result + " (BOT played " + botMove + ")]");
+	return ("RPS result[" + result + " (BOT played " + botMove + ")]");
 }
 
 static std::string trimWhitespace(const std::string& str) {

@@ -544,7 +544,7 @@ void Server::CheckActivity(void) {
 			int valread;
 			char *buffer = new char[1024];
 			memset(buffer, 0, 1024);
-			valread = recv(client_socket, buffer, sizeof(buffer), 0);
+			valread = recv(client_socket, buffer, 1024, 0);
 			if (this->_temp != "") {
 				std::string temp = this->_temp;
 				this->_temp = "";
@@ -560,10 +560,10 @@ void Server::CheckActivity(void) {
 				if (this->_message[0] == 'B' && this->_message[1] == 'O' && this->_message[2] == 'T' && this->_message[3] == '\0')
 				{
 					it->second.setIsBot(true);
+					it->second.setNickname("BOT");
 					std::cout << "Bot connected" << std::endl;
 				}
 				if (it->second.getIsBot()) {
-					it->second.setNickname("BOT");
 					if (!_awaitingBot.empty()) {
 						sendMsgToSocket(_awaitingBot[0].getSocket(), it->second.getNickname() + ": " + this->_message);
 						_awaitingBot.erase(_awaitingBot.begin());
