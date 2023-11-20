@@ -1,5 +1,6 @@
 .objects/
 .vscode/
-ircserv
 sic/
+ircserv
 ircbot
+.nfs*

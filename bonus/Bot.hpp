@@ -38,5 +38,6 @@ class Bot {
 		void Run(void);
 		void ParseArgs(int argc, char **argv);
 		std::string getTime(void);
-		
+		std::string getRPSMove(void);
+		std::string getRPSResult(std::string userMove, std::string botMove);
 };

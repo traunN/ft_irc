@@ -142,14 +142,13 @@ void Server::sendMsgToClients(std::string target, std::string message, Client &c
 		if (client_it == this->_clients.end())
 			throw std::invalid_argument("Client does not exist");
 		if (client_it->second.getNickname() == "BOT" && client_it->second.getIsBot()) {
-			this->sendMsgToSocket(client_it->second.getSocket(), message);
+			this->sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + " " + message);
 			_awaitingBot.insert(_awaitingBot.begin(), client);
 		}
-		else if (!client_it->second.getIsSic()){
+		else if (!client_it->second.getIsSic()) {
 			this->sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + ": " + message);
 		}
-		else if (client_it->second.getSocket() != client.getSocket())
-		{
+		else if (client_it->second.getSocket() != client.getSocket()) {
 			this->sendMsgToSocket(client_it->second.getSocket(), "PRIVMSG " + client_it->second.getNickname() + " :<" + client.getNickname() + ">: " + message);
 		}
 		return ;
@@ -565,7 +564,7 @@ void Server::CheckActivity(void) {
 				if (it->second.getIsBot()) {
 					it->second.setNickname("BOT");
 					if (!_awaitingBot.empty()) {
-						sendMsgToSocket(_awaitingBot[0].getSocket(), this->_message);
+						sendMsgToSocket(_awaitingBot[0].getSocket(), it->second.getNickname() + ": " + this->_message);
 						_awaitingBot.erase(_awaitingBot.begin());
 					}
 					continue;

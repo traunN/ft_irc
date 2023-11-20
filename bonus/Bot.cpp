@@ -1,7 +1,11 @@
 #include "Bot.hpp"
+#include <cstring>
 #include <ctime>
+#include <iostream>
 #include <sstream>
 #include <string>
+
+static std::string trimWhitespace(const std::string& str);
 
 Bot::Bot(std::string host, std::string password) {
 	this->_host = host;
@@ -34,15 +38,35 @@ void Bot::Run(void) {
 	std::string message;
 	while (1) {
 		char* buffer = new char[1024];
+		memset(buffer, 0, 0);
 		valread = recv(this->_socket, buffer, 1024, MSG_DONTWAIT);
 		if (valread > 0) {
 			message = buffer;
 		 	std::istringstream iss(message);
-			std::string command;
-			iss >> command;
-			if (command == "TIMER") {
+			std::string nickname, command, args;
+			iss >> nickname >> command;
+			std::getline(iss, args);
+			args = trimWhitespace(args);
+			if (command == "TIMER" && args == "") {
+				std::cout << "User " << nickname << " requested time" << std::endl;
 				std::string str = getTime();
 				send(this->_socket, str.c_str(), str.length(), 0);
+			}
+			else if (command == "PING" && args == "") {
+				send(this->_socket, "PONG", 4, 0);
+			}
+			else if (command == "RPS") {
+				if (args == "ROCK" || args == "PAPER" || args == "SCISSORS") {
+					std::cout << "User " << nickname << " requested to play Rock, Paper, Scissors and played " << args << std::endl;
+					std::string userMove = args;
+					std::string botMove = getRPSMove();
+					std::string result = getRPSResult(userMove, botMove);
+					send(this->_socket, result.c_str(), result.length(), 0);
+				}
+				else {
+					std::cout << "User " << nickname << " requested to play Rock, Paper, Scissors but played " << args << std::endl;
+					send(this->_socket, "ERROR", 5, 0);
+				}
 			}
 		}
 		delete [] buffer;
@@ -65,9 +89,65 @@ std::string Bot::getTime(void) {
 	time_t rawtime;
 	struct tm * timeinfo;
 	char buffer[80];
+
 	time (&rawtime);
 	timeinfo = localtime(&rawtime);
 	strftime(buffer,sizeof(buffer),"Today's date is %d-%m-%Y and current time is %H:%M:%S",timeinfo);
 	std::string str(buffer);
+
 	return str;
+}
+
+std::string Bot::getRPSMove(void) {
+	std::string move;
+	int random = rand() % 3;
+	switch (random) {
+		case 0:
+			move = "ROCK";
+			break;
+		case 1:
+			move = "PAPER";
+			break;
+		case 2:
+			move = "SCISSORS";
+			break;
+		default:
+			move = "ERROR";
+			break;
+	}
+
+	return move;
+}
+
+std::string Bot::getRPSResult(std::string userMove, std::string botMove) {
+	std::string result;
+
+	if (userMove == botMove)
+		result = "TIE";
+	else if (userMove == "ROCK" && botMove == "PAPER")
+		result = "LOSE";
+	else if (userMove == "ROCK" && botMove == "SCISSORS")
+		result = "WIN";
+	else if (userMove == "PAPER" && botMove == "ROCK")
+		result = "WIN";
+	else if (userMove == "PAPER" && botMove == "SCISSORS")
+		result = "LOSE";
+	else if (userMove == "SCISSORS" && botMove == "ROCK")
+		result = "LOSE";
+	else if (userMove == "SCISSORS" && botMove == "PAPER")
+		result = "WIN";
+	else
+		result = "ERROR";
+
+	return ("Result[" + result + " (BOT played " + botMove + ")]");
+}
+
+static std::string trimWhitespace(const std::string& str) {
+	const std::string whitespace = " \t\n\r\f\v";
+	std::string::size_type strBegin = str.find_first_not_of(whitespace);
+	if (strBegin == std::string::npos)
+		return "";
+	std::string::size_type strEnd = str.find_last_not_of(whitespace);
+	std::string::size_type strRange = strEnd - strBegin + 1;
+	return str.substr(strBegin, strRange);
 }
