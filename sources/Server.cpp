@@ -572,7 +572,10 @@ void Server::CheckActivity(void) {
 				}
 				size_t newlinePos = this->_message.find('\n');
 				if (newlinePos != std::string::npos) {
-					this->_message = this->_message.substr(0, newlinePos);
+					if (this->_message[newlinePos + 1] != 'N')
+					{
+						this->_message = this->_message.substr(0, newlinePos);
+					}
 				}
 				else {
 					this->_temp = this->_message;

@@ -180,7 +180,6 @@ int Channel::addMode(std::string mode, std::string arg) {
 		return 3;
 	}
 	else if (mode == "o") {
-		std::cout << "arg:" << arg << std::endl;
 		this->addOp(*getClient(arg));
 		return 4;
 	}
