@@ -75,7 +75,7 @@ void Server::Run(void) {
 				if (client_socket > max_fd)
 					max_fd = client_socket;
 			}
-		}
+		} 	
 		if (select(max_fd + 1, &this->_readfds, NULL, NULL, NULL) < 0)
 			throw std::runtime_error("select");
 		if (FD_ISSET(this->_server_fd, &this->_readfds))
@@ -543,7 +543,8 @@ void Server::CheckActivity(void) {
 		if (FD_ISSET(client_socket, &this->_readfds)) {
 			int valread;
 			char *buffer = new char[1024];
-			valread = recv(client_socket, buffer, 1024, MSG_DONTWAIT);
+			memset(buffer, 0, 1024);
+			valread = recv(client_socket, buffer, sizeof(buffer), 0);
 			if (this->_temp != "") {
 				std::string temp = this->_temp;
 				this->_temp = "";
@@ -571,14 +572,10 @@ void Server::CheckActivity(void) {
 				}
 				size_t newlinePos = this->_message.find('\n');
 				if (newlinePos != std::string::npos) {
-					if (this->_message[newlinePos + 1] != 'N')
-					{
-						this->_message = this->_message.substr(0, newlinePos);
-					}
+					this->_message = this->_message.substr(0, newlinePos);
 				}
 				else {
-					// this->_message -1 character
-					this->_temp = this->_message.substr(0, this->_message.length() - 2);
+					this->_temp = this->_message;
 					continue;
 				}
 				if (it->second.getPassword() == "") {
