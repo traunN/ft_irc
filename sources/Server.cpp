@@ -343,6 +343,8 @@ void Server::inviteClientToChannel(std::string input, Client &client) {
 			channel_it->addInvited(nickname);
 			sendMsgToSocket(client.getSocket(), "You invited " + nickname + " to join " + channel);
 			std::map<int, Client>::iterator client_it = this->getClient(nickname);
+			if (channel_it->isClientInChannel(client_it->second))
+				throw std::invalid_argument("User is already in channel");
 			sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + " invited you to join " + channel);
 		}
 		else
