@@ -13,7 +13,6 @@ Server::Server(char const *argv1, char const *argv2) {
 		this->_addrlen = sizeof(this->_address);
 		std::stringstream ss(argv1);
 		ss >> this->_port;
-		// this->_password = argv2;
 		this->_password = utils::hashPassword(argv2);
 		try {
 			this->Init();
@@ -75,7 +74,7 @@ void Server::Run(void) {
 				if (client_socket > max_fd)
 					max_fd = client_socket;
 			}
-		} 	
+		}
 		if (select(max_fd + 1, &this->_readfds, NULL, NULL, NULL) < 0)
 			throw std::runtime_error("select");
 		if (FD_ISSET(this->_server_fd, &this->_readfds))
@@ -86,7 +85,7 @@ void Server::Run(void) {
 }
 
 void Server::sendMsgToSocket(int client_socket, std::string message) {
-	message = message + "\n";
+	message = message + "\r\n";
 	int bytes_sent = send(client_socket, message.c_str(), message.length(), 0);
 	if (bytes_sent < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
 		throw std::runtime_error("send");
@@ -113,7 +112,6 @@ std::map<int, Client>::iterator Server::getClient(std::string client_name) {
 }
 
 void Server::sendMsgToClients(std::string target, std::string message, Client &client) {
-	// check if its a channel name send to all clients in this channel expect client
 	if (target[0] == '#') {
 		std::string channel_name = target;
 		std::vector<Channel>::iterator channel_it = this->getChannel(channel_name);
@@ -125,13 +123,9 @@ void Server::sendMsgToClients(std::string target, std::string message, Client &c
 			if (channel_it->isClientInChannel(*client_it->second))
 			{
 				if (!client_it->second->getIsSic())
-				{
 					sendMsgToSocket(client_it->second->getSocket(), channel_name + "\t <" + client.getNickname() + "> : " + message);
-				}
 				else if (client_it->second->getSocket() != client.getSocket())
-				{
 					sendMsgToSocket(client_it->second->getSocket(), "PRIVMSG " + channel_name + " :<" + client.getNickname() + ">: " + message);
-				}
 			}
 		}
 		return ;
@@ -145,12 +139,15 @@ void Server::sendMsgToClients(std::string target, std::string message, Client &c
 			this->sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + " " + message);
 			_awaitingBot.insert(_awaitingBot.begin(), client);
 		}
-		else if (!client_it->second.getIsSic()) {
-			this->sendMsgToSocket(client_it->second.getSocket(), client.getNickname() + ": " + message);
+		else if (!client_it->second.getIsSic())
+		{
+			this->sendMsgToSocket(client_it->second.getSocket(), client_it->second.getNickname() + "\t <" + client.getNickname() + "> : " + message);
 		}
-		else if (client_it->second.getSocket() != client.getSocket()) {
+		else if (client_it->second.getSocket() != client.getSocket())
 			this->sendMsgToSocket(client_it->second.getSocket(), "PRIVMSG " + client_it->second.getNickname() + " :<" + client.getNickname() + ">: " + message);
-		}
+		if (!client.getIsSic())
+			if (!client_it->second.getIsBot())
+				this->sendMsgToSocket(client.getSocket(), client_it->second.getNickname() + "\t <" + client.getNickname() + "> : " + message);
 		return ;
 	}
 }
@@ -171,22 +168,15 @@ void Server::handleMessage(std::string input, Client &client) {
 		message = message.substr(2);
 		size_t newlinePos = message.find('\r');
 		if (newlinePos != std::string::npos)
-		{
 			message = message.substr(0, newlinePos);
-		}
-		// remove \n too
 		newlinePos = message.find('\n');
 		if (newlinePos != std::string::npos)
-		{
 			message = message.substr(0, newlinePos);
-		}
 		if (message == "")
 			return ;
 	}
 	else
-	{
 		message = message.substr(1);
-	}
 	sendMsgToClients(target, message, client);
 }
 
@@ -328,7 +318,7 @@ void Server::inviteClientToChannel(std::string input, Client &client) {
 	std::string nickname;
 
 	std::stringstream ss(input);
-	ss.ignore(7); //we ignore the command
+	ss.ignore(7);
 	ss >> channel;
 	ss >> nickname;
 	if (!this->ChannelExists(channel))
@@ -458,9 +448,8 @@ void Server::changeChannelTopic(std::string input, Client &client) {
 			throw std::invalid_argument("This channel has no topic");
 		else if (topic.empty())
 			throw std::invalid_argument("Invalid topic");
-		else {
+		else
 			channel_it->setTopic(utils::trimWhitespace(topic));
-		}
 	}
 	else {
 		throw std::invalid_argument("Channel does not exist");
@@ -575,9 +564,7 @@ void Server::CheckActivity(void) {
 				size_t newlinePos = this->_message.find('\n');
 				if (newlinePos != std::string::npos) {
 					if (this->_message[newlinePos + 1] != 'N')
-					{
 						this->_message = this->_message.substr(0, newlinePos);
-					}
 				}
 				else {
 					this->_temp = this->_message;
@@ -591,15 +578,12 @@ void Server::CheckActivity(void) {
 						disconnected_clients.insert(std::pair<int, Client>(client_socket, it->second));
 					}
 				}
-				else if (it->second.getNickname() == "") {
+				else if (it->second.getNickname() == "")
 					this->handleNickname(client_socket, it->second);
-				}
-				else if (it->second.getUsername() == "") {
+				else if (it->second.getUsername() == "")
 					this->handleUsername(client_socket, it->second);
-				}
-				else {
+				else
 					it->second.handleMessage(this->_message, *this);
-				}
 			}
 		}
 	}

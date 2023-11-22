@@ -69,6 +69,10 @@ void Bot::Run(void) {
 					send(this->_socket, "ERROR", 5, 0);
 				}
 			}
+			else
+			{
+				send(this->_socket, "INVALID COMMAND", 16, 0);
+			}
 		}
 		delete [] buffer;
 	}
